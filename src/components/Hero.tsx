@@ -24,8 +24,7 @@ export const Hero = () => {
               </Button>
               <Button
                 size="lg"
-                variant="outline"
-                className="border-white text-white hover:bg-white/10 animate-fadeIn"
+                className="bg-transparent text-white animate-fadeIn"
                 asChild
               >
                 <Link to="/register">List Your Salon</Link>
