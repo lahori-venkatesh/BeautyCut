@@ -6,45 +6,45 @@ import { Link } from "react-router-dom";
 
 const FEATURED_SALONS = [
   {
-    name: "Elegance Hair Studio",
-    image: "/placeholder.svg",
+    name: "Style Studio Hyderabad",
+    image: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80",
     rating: 4.8,
-    location: "Downtown, NYC",
+    location: "Banjara Hills, Hyderabad",
     services: ["Haircut", "Color", "Styling"],
   },
   {
-    name: "Pure Beauty Spa",
-    image: "/placeholder.svg",
+    name: "Bangalore Beauty Lounge",
+    image: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80",
     rating: 4.9,
-    location: "Brooklyn, NYC",
+    location: "Indiranagar, Bangalore",
     services: ["Facial", "Massage", "Nails"],
   },
   {
-    name: "Modern Cuts",
-    image: "/placeholder.svg",
+    name: "Hyderabad Hair Hub",
+    image: "https://images.unsplash.com/photo-1633681926022-84c23e8cb2d6?auto=format&fit=crop&w=800&q=80",
     rating: 4.7,
-    location: "Queens, NYC",
+    location: "Jubilee Hills, Hyderabad",
     services: ["Haircut", "Beard Trim", "Styling"],
   },
   {
-    name: "Glamour & Grace",
-    image: "/placeholder.svg",
+    name: "Bangalore Glamour",
+    image: "https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=800&q=80",
     rating: 4.9,
-    location: "Manhattan, NYC",
+    location: "Koramangala, Bangalore",
     services: ["Makeup", "Hair Styling", "Bridal"],
   },
   {
-    name: "Zen Spa & Beauty",
-    image: "/placeholder.svg",
+    name: "Royal Spa Hyderabad",
+    image: "https://images.unsplash.com/photo-1600948836101-f9ffda59d250?auto=format&fit=crop&w=800&q=80",
     rating: 4.8,
-    location: "Staten Island, NYC",
+    location: "Gachibowli, Hyderabad",
     services: ["Massage", "Facial", "Body Treatments"],
   },
   {
-    name: "The Barber's Corner",
-    image: "/placeholder.svg",
+    name: "Bangalore Barbers",
+    image: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=800&q=80",
     rating: 4.6,
-    location: "Bronx, NYC",
+    location: "HSR Layout, Bangalore",
     services: ["Men's Cuts", "Shave", "Hair Treatment"],
   },
 ];
@@ -99,9 +99,9 @@ const Index = () => {
       <Hero />
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4">Featured Salons</h2>
+          <h2 className="text-3xl font-bold mb-4">Featured Salons in Hyderabad & Bangalore</h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Discover top-rated salons in your area, from classic barbershops to luxury spa experiences
+            Discover top-rated salons in your city, from classic barbershops to luxury spa experiences
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
