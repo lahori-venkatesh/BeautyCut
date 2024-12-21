@@ -44,7 +44,7 @@ export const Navbar = () => {
           </button>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex md:items-center md:space-x-4">
+          <div className="hidden md:flex md:items-center md:space-x-2">
             <Button variant="ghost" asChild className="text-base">
               <Link to="/">Home</Link>
             </Button>
@@ -57,7 +57,7 @@ export const Navbar = () => {
           </div>
 
           {/* Desktop Buttons */}
-          <div className="hidden md:flex md:items-center md:space-x-4">
+          <div className="hidden md:flex md:items-center md:space-x-2">
             <Button variant="outline" onClick={handleListSalon}>
               List Your Salon
             </Button>
