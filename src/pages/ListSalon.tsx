@@ -2,25 +2,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Form } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { GalleryUpload } from "@/components/salon/GalleryUpload";
+import { BookingFeatures } from "@/components/salon/BookingFeatures";
+import { PromotionsSection } from "@/components/salon/PromotionsSection";
+import { AccessibilitySection } from "@/components/salon/AccessibilitySection";
 
 const formSchema = z.object({
   // Basic Details
@@ -47,26 +35,17 @@ const formSchema = z.object({
   certifications: z.string().optional(),
   specialtyServices: z.string().optional(),
 
-  // Ambiance
-  description: z.string().min(10, { message: "Description must be at least 10 characters" }),
-  
-  // Booking
-  bookingPolicy: z.string().min(1, { message: "Booking policy is required" }),
+  // New fields
+  salonImages: z.any().optional(),
+  parkingImages: z.any().optional(),
+  onlineBooking: z.boolean().default(false),
   cancellationPolicy: z.string().min(1, { message: "Cancellation policy is required" }),
-
-  // Facilities
+  waitlistOptions: z.boolean().default(false),
+  currentOffers: z.string().optional(),
+  membershipPlans: z.string().optional(),
   parkingInfo: z.string().optional(),
-  accessibility: z.string().optional(),
+  accessibilityFeatures: z.string().optional(),
   paymentMethods: z.string().min(1, { message: "Payment methods are required" }),
-
-  // Safety
-  hygieneMeasures: z.string().min(1, { message: "Hygiene measures are required" }),
-  covidPrecautions: z.string().optional(),
-
-  // Additional
-  brands: z.string().optional(),
-  additionalFacilities: z.string().optional(),
-  loyaltyProgram: z.string().optional(),
 });
 
 export default function ListSalon() {
@@ -94,22 +73,21 @@ export default function ListSalon() {
       staffProfiles: "",
       certifications: "",
       specialtyServices: "",
-      description: "",
-      bookingPolicy: "",
+      salonImages: undefined,
+      parkingImages: undefined,
+      onlineBooking: false,
+      waitlistOptions: false,
       cancellationPolicy: "",
+      currentOffers: "",
+      membershipPlans: "",
       parkingInfo: "",
-      accessibility: "",
+      accessibilityFeatures: "",
       paymentMethods: "",
-      hygieneMeasures: "",
-      covidPrecautions: "",
-      brands: "",
-      additionalFacilities: "",
-      loyaltyProgram: "",
     },
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
+    console.log("Form submitted with values:", values);
     toast({
       title: "Salon Registration Successful",
       description: "We'll review your application and get back to you soon.",
@@ -234,157 +212,11 @@ export default function ListSalon() {
               </div>
             </div>
 
-            {/* Services Section */}
-            <div className="bg-white p-6 rounded-lg shadow-sm space-y-6">
-              <h2 className="text-xl font-semibold mb-4">Services</h2>
-              <div className="grid grid-cols-1 gap-6">
-                <FormField
-                  control={form.control}
-                  name="serviceCategories"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Service Categories</FormLabel>
-                      <FormControl>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select categories" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="haircare">Haircare</SelectItem>
-                            <SelectItem value="skincare">Skincare</SelectItem>
-                            <SelectItem value="makeup">Makeup</SelectItem>
-                            <SelectItem value="nails">Nail Services</SelectItem>
-                            <SelectItem value="spa">Spa Treatments</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="serviceList"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Service List</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="List your services (one per line)" 
-                          className="min-h-[100px]"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="priceRange"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Price Range</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., $30-$200" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
-            {/* Staff Section */}
-            <div className="bg-white p-6 rounded-lg shadow-sm space-y-6">
-              <h2 className="text-xl font-semibold mb-4">Staff & Expertise</h2>
-              <div className="grid grid-cols-1 gap-6">
-                <FormField
-                  control={form.control}
-                  name="staffProfiles"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Staff Profiles</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Enter staff details and their expertise" 
-                          className="min-h-[100px]"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="certifications"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Certifications</FormLabel>
-                      <FormControl>
-                        <Input placeholder="List relevant certifications" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
-            {/* Policies & Features */}
-            <div className="bg-white p-6 rounded-lg shadow-sm space-y-6">
-              <h2 className="text-xl font-semibold mb-4">Policies & Features</h2>
-              <div className="grid grid-cols-1 gap-6">
-                <FormField
-                  control={form.control}
-                  name="bookingPolicy"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Booking Policy</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Describe your booking policy" 
-                          className="min-h-[100px]"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="hygieneMeasures"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Hygiene Measures</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Describe your hygiene and safety measures" 
-                          className="min-h-[100px]"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="paymentMethods"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Payment Methods</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., Cash, Cards, UPI" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
+            {/* New Sections */}
+            <GalleryUpload form={form} />
+            <BookingFeatures form={form} />
+            <PromotionsSection form={form} />
+            <AccessibilitySection form={form} />
 
             <Button type="submit" className="w-full">Submit Salon Listing</Button>
           </form>
