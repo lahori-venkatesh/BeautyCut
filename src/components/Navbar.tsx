@@ -1,25 +1,18 @@
 import { Button } from "@/components/ui/button";
 import { Scissors, Menu, X } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
 
 export const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { toast } = useToast();
-
-  const handleSignUp = () => {
-    toast({
-      title: "Sign Up",
-      description: "Sign up functionality coming soon!",
-    });
-  };
+  const navigate = useNavigate();
 
   const handleListSalon = () => {
-    toast({
-      title: "List Your Salon",
-      description: "Salon listing functionality coming soon!",
-    });
+    navigate('/list-salon');
+  };
+
+  const handleSignUp = () => {
+    navigate('/signup');
   };
 
   return (
@@ -31,7 +24,6 @@ export const Navbar = () => {
             <span className="text-xl font-bold text-primary">BeautyCut</span>
           </Link>
           
-          {/* Mobile menu button */}
           <button
             className="md:hidden"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -43,7 +35,6 @@ export const Navbar = () => {
             )}
           </button>
 
-          {/* Desktop Navigation */}
           <div className="hidden md:flex md:items-center md:space-x-2">
             <Button variant="ghost" asChild className="text-base">
               <Link to="/">Home</Link>
@@ -56,7 +47,6 @@ export const Navbar = () => {
             </Button>
           </div>
 
-          {/* Desktop Buttons */}
           <div className="hidden md:flex md:items-center md:space-x-2">
             <Button variant="outline" onClick={handleListSalon}>
               List Your Salon
@@ -67,7 +57,6 @@ export const Navbar = () => {
           </div>
         </div>
 
-        {/* Mobile Navigation */}
         {isMenuOpen && (
           <div className="md:hidden pt-4 pb-3 space-y-2">
             <Button variant="ghost" asChild className="w-full justify-start">

@@ -1,16 +1,12 @@
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Search, Calendar, Star, Scissors } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
 
 export const Hero = () => {
-  const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleListSalon = () => {
-    toast({
-      title: "List Your Salon",
-      description: "Salon listing functionality coming soon!",
-    });
+    navigate('/list-salon');
   };
 
   return (
