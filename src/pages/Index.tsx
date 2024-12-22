@@ -2,7 +2,7 @@ import { Hero } from "@/components/Hero";
 import { Navbar } from "@/components/Navbar";
 import { SalonCard } from "@/components/SalonCard";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const FEATURED_SALONS = [
   {
@@ -93,6 +93,8 @@ const Footer = () => (
 );
 
 const Index = () => {
+  const navigate = useNavigate();
+  
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -110,8 +112,8 @@ const Index = () => {
           ))}
         </div>
         <div className="text-center mt-12">
-          <Button size="lg" asChild>
-            <Link to="/salons">View All Salons</Link>
+          <Button size="lg" onClick={() => navigate('/salons')}>
+            View All Salons
           </Button>
         </div>
       </div>

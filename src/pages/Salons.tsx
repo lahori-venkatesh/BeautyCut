@@ -47,7 +47,69 @@ const MOCK_SALONS: Salon[] = [
     services: ["Facial", "Massage", "Nails"],
     coordinates: { latitude: 12.9716, longitude: 77.6441 }
   },
-  // Add more mock salons as needed
+  {
+    id: "3",
+    name: "Glamour Zone Mumbai",
+    image: "https://images.unsplash.com/photo-1633681926022-84c23e8cb2d6?auto=format&fit=crop&w=800&q=80",
+    rating: 4.7,
+    location: "Bandra West, Mumbai",
+    services: ["Makeup", "Hair Styling", "Spa"],
+    coordinates: { latitude: 19.0596, longitude: 72.8295 }
+  },
+  {
+    id: "4",
+    name: "Elite Cuts Delhi",
+    image: "https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=800&q=80",
+    rating: 4.6,
+    location: "Connaught Place, Delhi",
+    services: ["Haircut", "Beard Trim", "Facial"],
+    coordinates: { latitude: 28.6329, longitude: 77.2195 }
+  },
+  {
+    id: "5",
+    name: "Luxe Beauty Chennai",
+    image: "https://images.unsplash.com/photo-1600948836101-f9ffda59d250?auto=format&fit=crop&w=800&q=80",
+    rating: 4.8,
+    location: "T Nagar, Chennai",
+    services: ["Bridal Makeup", "Hair Treatment", "Manicure"],
+    coordinates: { latitude: 13.0827, longitude: 80.2707 }
+  },
+  {
+    id: "6",
+    name: "Royal Spa Pune",
+    image: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=800&q=80",
+    rating: 4.9,
+    location: "Koregaon Park, Pune",
+    services: ["Massage", "Body Treatments", "Facial"],
+    coordinates: { latitude: 18.5204, longitude: 73.8567 }
+  },
+  {
+    id: "7",
+    name: "The Barber's Club",
+    image: "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=800&q=80",
+    rating: 4.7,
+    location: "Whitefield, Bangalore",
+    services: ["Men's Grooming", "Beard Styling", "Hair Color"],
+    coordinates: { latitude: 12.9698, longitude: 77.7499 }
+  },
+  {
+    id: "8",
+    name: "Serenity Wellness",
+    image: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80",
+    rating: 4.8,
+    location: "Jubilee Hills, Hyderabad",
+    services: ["Spa", "Wellness", "Yoga"],
+    coordinates: { latitude: 17.4319, longitude: 78.4073 }
+  },
+  {
+    id: "9",
+    name: "Trendy Cuts Kolkata",
+    image: "https://images.unsplash.com/photo-1493256338651-d82f7acb2b38?auto=format&fit=crop&w=800&q=80",
+    rating: 4.6,
+    location: "Park Street, Kolkata",
+    services: ["Haircut", "Styling", "Makeup"],
+    coordinates: { latitude: 22.5726, longitude: 88.3639 }
+  }
 ];
 
 const Salons = () => {
