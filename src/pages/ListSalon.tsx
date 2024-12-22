@@ -100,7 +100,7 @@ export default function ListSalon() {
       title: "Salon Registration Successful",
       description: "We'll review your application and get back to you soon.",
     });
-    navigate("/");
+    navigate("/admin-dashboard");
   }
 
   return (
@@ -109,7 +109,6 @@ export default function ListSalon() {
       <div className="max-w-4xl mx-auto">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            {/* Basic Details Section */}
             <div className="bg-white p-6 rounded-lg shadow-sm space-y-6">
               <h2 className="text-xl font-semibold mb-4">Basic Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -220,7 +219,6 @@ export default function ListSalon() {
               </div>
             </div>
 
-            {/* New Sections */}
             <GalleryUpload form={form} />
             <BookingFeatures form={form} />
             <PromotionsSection form={form} />
