@@ -2,17 +2,18 @@ import { Button } from "@/components/ui/button";
 import { Scissors, Menu, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { AuthDialog } from "./AuthDialog";
+import { UserMenu } from "./UserMenu";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const handleListSalon = () => {
     navigate('/list-salon');
-  };
-
-  const handleSignUp = () => {
-    navigate('/signup');
   };
 
   return (
@@ -51,9 +52,11 @@ export const Navbar = () => {
             <Button variant="outline" onClick={handleListSalon}>
               List Your Salon
             </Button>
-            <Button onClick={handleSignUp}>
-              Sign Up
-            </Button>
+            {user ? (
+              <UserMenu />
+            ) : (
+              <Button onClick={() => setIsAuthOpen(true)}>Sign Up</Button>
+            )}
           </div>
         </div>
 
@@ -71,12 +74,19 @@ export const Navbar = () => {
             <Button variant="outline" onClick={handleListSalon} className="w-full justify-start">
               List Your Salon
             </Button>
-            <Button onClick={handleSignUp} className="w-full justify-start">
-              Sign Up
-            </Button>
+            {user ? (
+              <Button variant="ghost" onClick={() => navigate("/profile")} className="w-full justify-start">
+                My Profile
+              </Button>
+            ) : (
+              <Button onClick={() => setIsAuthOpen(true)} className="w-full justify-start">
+                Sign Up
+              </Button>
+            )}
           </div>
         )}
       </div>
+      <AuthDialog isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
     </nav>
   );
 };
