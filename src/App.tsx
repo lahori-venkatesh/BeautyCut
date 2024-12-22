@@ -7,6 +7,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import Index from "./pages/Index";
 import ListSalon from "./pages/ListSalon";
 import SignUp from "./pages/SignUp";
+import Salons from "./pages/Salons";
 
 const queryClient = new QueryClient();
 
@@ -19,7 +20,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/salons" element={<Index />} />
+            <Route path="/salons" element={<Salons />} />
             <Route path="/about" element={<Index />} />
             <Route path="/list-salon" element={<ListSalon />} />
             <Route path="/signup" element={<SignUp />} />

@@ -24,9 +24,9 @@ export const Hero = () => {
               <Button
                 size="lg"
                 className="bg-white text-primary hover:bg-gray-100 animate-fadeIn w-full md:w-auto"
-                asChild
+                onClick={() => navigate('/salons')}
               >
-                <Link to="/salons">Find Salons</Link>
+                Find Salons
               </Button>
               <Button
                 size="lg"

@@ -1,3 +1,4 @@
+import { Navbar } from "@/components/Navbar";
 import { useState, useEffect } from "react";
 import { SalonCard } from "@/components/SalonCard";
 import { Input } from "@/components/ui/input";
@@ -46,10 +47,10 @@ const MOCK_SALONS: Salon[] = [
     services: ["Facial", "Massage", "Nails"],
     coordinates: { latitude: 12.9716, longitude: 77.6441 }
   },
-  // ... Add more mock salons as needed
+  // Add more mock salons as needed
 ];
 
-export default function Salons() {
+const Salons = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("name");
   const [salons, setSalons] = useState<Salon[]>(MOCK_SALONS);
@@ -75,7 +76,7 @@ export default function Salons() {
         }
       );
     }
-  }, [user]);
+  }, [user, toast]);
 
   // Calculate distance between two points using Haversine formula
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
@@ -136,58 +137,63 @@ export default function Salons() {
   }, [searchTerm, sortBy, userLocation]);
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-4">Find Your Perfect Salon</h1>
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search by salon name, location, or services..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-4">Find Your Perfect Salon</h1>
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search by salon name, location, or services..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-full md:w-[200px]">
+                <SelectValue placeholder="Sort by..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name">Sort by Name</SelectItem>
+                <SelectItem value="rating">Sort by Rating</SelectItem>
+                {userLocation && <SelectItem value="distance">Sort by Distance</SelectItem>}
+              </SelectContent>
+            </Select>
+            {!user && (
+              <Button
+                variant="outline"
+                className="flex items-center gap-2"
+                onClick={() => {
+                  toast({
+                    title: "Sign Up Required",
+                    description: "Please sign up to enable location-based sorting",
+                  });
+                }}
+              >
+                <MapPin className="h-4 w-4" />
+                Enable Location
+              </Button>
+            )}
           </div>
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-full md:w-[200px]">
-              <SelectValue placeholder="Sort by..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="name">Sort by Name</SelectItem>
-              <SelectItem value="rating">Sort by Rating</SelectItem>
-              {userLocation && <SelectItem value="distance">Sort by Distance</SelectItem>}
-            </SelectContent>
-          </Select>
-          {!user && (
-            <Button
-              variant="outline"
-              className="flex items-center gap-2"
-              onClick={() => {
-                toast({
-                  title: "Sign Up Required",
-                  description: "Please sign up to enable location-based sorting",
-                });
-              }}
-            >
-              <MapPin className="h-4 w-4" />
-              Enable Location
-            </Button>
-          )}
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {salons.map((salon) => (
-          <SalonCard key={salon.id} {...salon} />
-        ))}
-      </div>
-
-      {salons.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-gray-500">No salons found matching your search criteria.</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {salons.map((salon) => (
+            <SalonCard key={salon.id} {...salon} />
+          ))}
         </div>
-      )}
+
+        {salons.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-500">No salons found matching your search criteria.</p>
+          </div>
+        )}
+      </div>
     </div>
   );
-}
+};
+
+export default Salons;
