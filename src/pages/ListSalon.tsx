@@ -17,6 +17,8 @@ import { GalleryUpload } from "@/components/salon/GalleryUpload";
 import { BookingFeatures } from "@/components/salon/BookingFeatures";
 import { PromotionsSection } from "@/components/salon/PromotionsSection";
 import { AccessibilitySection } from "@/components/salon/AccessibilitySection";
+import { ServicesSection } from "@/components/salon/ServicesSection";
+import { StaffSection } from "@/components/salon/StaffSection";
 
 const formSchema = z.object({
   // Basic Details
@@ -33,27 +35,43 @@ const formSchema = z.object({
   googleMapsLink: z.string().url().optional(),
 
   // Services
-  serviceCategories: z.string().min(1, { message: "At least one service category is required" }),
-  serviceList: z.string().min(1, { message: "Service list is required" }),
-  priceRange: z.string().min(1, { message: "Price range is required" }),
-  customPackages: z.string().optional(),
+  services: z.array(z.object({
+    name: z.string(),
+    description: z.string(),
+    price: z.string(),
+    duration: z.string(),
+    experts: z.array(z.string())
+  })),
 
   // Staff
-  staffProfiles: z.string().optional(),
-  certifications: z.string().optional(),
-  specialtyServices: z.string().optional(),
+  staff: z.array(z.object({
+    name: z.string(),
+    role: z.string(),
+    expertise: z.array(z.string()),
+    image: z.any().optional(),
+    rating: z.number().min(0).max(5)
+  })),
 
-  // New fields
-  salonImages: z.any().optional(),
-  parkingImages: z.any().optional(),
-  onlineBooking: z.boolean().default(false),
-  cancellationPolicy: z.string().min(1, { message: "Cancellation policy is required" }),
-  waitlistOptions: z.boolean().default(false),
-  currentOffers: z.string().optional(),
-  membershipPlans: z.string().optional(),
-  parkingInfo: z.string().optional(),
-  accessibilityFeatures: z.string().optional(),
-  paymentMethods: z.string().min(1, { message: "Payment methods are required" }),
+  // Gallery
+  salonImages: z.any().array(),
+  parkingImages: z.any().array(),
+
+  // Booking Features
+  onlineBooking: z.boolean(),
+  cancellationPolicy: z.string(),
+  waitlistOptions: z.boolean(),
+
+  // Promotions
+  currentOffers: z.string(),
+  membershipPlans: z.string(),
+
+  // Accessibility
+  parkingInfo: z.string(),
+  accessibilityFeatures: z.string(),
+  paymentMethods: z.string(),
+
+  // Safety Measures
+  safetyMeasures: z.array(z.string()),
 });
 
 export default function ListSalon() {
@@ -74,15 +92,10 @@ export default function ListSalon() {
       socialMedia: "",
       operatingHours: "",
       googleMapsLink: "",
-      serviceCategories: "",
-      serviceList: "",
-      priceRange: "",
-      customPackages: "",
-      staffProfiles: "",
-      certifications: "",
-      specialtyServices: "",
-      salonImages: undefined,
-      parkingImages: undefined,
+      services: [],
+      staff: [],
+      salonImages: [],
+      parkingImages: [],
       onlineBooking: false,
       waitlistOptions: false,
       cancellationPolicy: "",
@@ -91,16 +104,22 @@ export default function ListSalon() {
       parkingInfo: "",
       accessibilityFeatures: "",
       paymentMethods: "",
+      safetyMeasures: [],
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     console.log("Form submitted with values:", values);
+    
+    // Here you would typically send the data to your backend
+    // For now, we'll just show a success message
     toast({
       title: "Salon Registration Successful",
-      description: "We'll review your application and get back to you soon.",
+      description: "Your salon has been listed successfully.",
     });
-    navigate("/admin-dashboard");
+    
+    // Navigate to the salons page where the new listing should appear
+    navigate("/salons");
   }
 
   return (
@@ -219,6 +238,8 @@ export default function ListSalon() {
               </div>
             </div>
 
+            <ServicesSection form={form} />
+            <StaffSection form={form} />
             <GalleryUpload form={form} />
             <BookingFeatures form={form} />
             <PromotionsSection form={form} />
