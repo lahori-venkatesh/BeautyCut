@@ -2,24 +2,17 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Form } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { GalleryUpload } from "@/components/salon/GalleryUpload";
 import { BookingFeatures } from "@/components/salon/BookingFeatures";
 import { PromotionsSection } from "@/components/salon/PromotionsSection";
 import { AccessibilitySection } from "@/components/salon/AccessibilitySection";
 import { ServicesSection } from "@/components/salon/ServicesSection";
 import { StaffSection } from "@/components/salon/StaffSection";
-import { ArrowLeft } from "lucide-react";
+import { BasicDetailsSection } from "@/components/salon/BasicDetailsSection";
 import { useAuth } from "@/contexts/AuthContext";
 import { SalonOwnerSignUp } from "@/components/SalonOwnerSignUp";
 
@@ -97,7 +90,7 @@ export default function ListSalon() {
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     console.log("Form submitted with values:", values);
     
     toast({
@@ -105,8 +98,8 @@ export default function ListSalon() {
       description: "Your salon has been listed successfully.",
     });
     
-    navigate("/salons");
-  }
+    navigate("/salon-admin");
+  };
 
   if (!user || user.role !== 'salon_owner') {
     return (
@@ -145,123 +138,13 @@ export default function ListSalon() {
       <div className="max-w-4xl mx-auto">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <div className="bg-white p-6 rounded-lg shadow-sm space-y-6">
-              <h2 className="text-xl font-semibold mb-4">Basic Details</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="salonName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Salon Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter salon name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter email address" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Phone Number</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter phone number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="address"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Address</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter street address" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="city"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>City</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter city" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="state"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>State</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter state" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="zipCode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>ZIP Code</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter ZIP code" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="operatingHours"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Operating Hours</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., Mon-Fri: 9AM-7PM" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
+            <BasicDetailsSection form={form} />
             <ServicesSection form={form} />
             <StaffSection form={form} />
             <GalleryUpload form={form} />
             <BookingFeatures form={form} />
             <PromotionsSection form={form} />
             <AccessibilitySection form={form} />
-
             <Button type="submit" className="w-full">Submit Salon Listing</Button>
           </form>
         </Form>
