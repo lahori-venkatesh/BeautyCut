@@ -32,15 +32,31 @@ export const UserMenu = () => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => navigate("/profile")}>
-          Profile
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate("/bookings")}>
-          My Bookings
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate("/favorites")}>
-          Favorites
-        </DropdownMenuItem>
+        {user.role === 'salon_owner' ? (
+          <>
+            <DropdownMenuItem onClick={() => navigate("/salon-dashboard")}>
+              Dashboard
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate("/manage-bookings")}>
+              Manage Bookings
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate("/salon-settings")}>
+              Salon Settings
+            </DropdownMenuItem>
+          </>
+        ) : (
+          <>
+            <DropdownMenuItem onClick={() => navigate("/profile")}>
+              Profile
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate("/bookings")}>
+              My Bookings
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate("/favorites")}>
+              Favorites
+            </DropdownMenuItem>
+          </>
+        )}
         <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

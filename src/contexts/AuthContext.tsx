@@ -6,12 +6,13 @@ interface User {
   name: string;
   email: string;
   avatar?: string;
+  role: 'user' | 'salon_owner';
 }
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<void>;
-  signup: (name: string, email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, role: 'user' | 'salon_owner') => Promise<void>;
+  signup: (name: string, email: string, password: string, role: 'user' | 'salon_owner') => Promise<void>;
   logout: () => void;
 }
 
@@ -21,20 +22,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const { toast } = useToast();
 
-  // In a real app, this would be replaced with actual API calls
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, role: 'user' | 'salon_owner') => {
     try {
       // Simulate API call
       const mockUser = {
         id: '1',
-        name: 'John Doe',
+        name: role === 'salon_owner' ? 'Salon Owner' : 'John Doe',
         email: email,
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John'
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
+        role: role
       };
       setUser(mockUser);
       toast({
         title: "Login successful",
-        description: "Welcome back!",
+        description: `Welcome back, ${role === 'salon_owner' ? 'Salon Owner' : 'User'}!`,
       });
     } catch (error) {
       toast({
@@ -45,19 +46,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signup = async (name: string, email: string, password: string) => {
+  const signup = async (name: string, email: string, password: string, role: 'user' | 'salon_owner') => {
     try {
-      // Simulate API call
       const mockUser = {
         id: '1',
         name: name,
         email: email,
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
+        role: role
       };
       setUser(mockUser);
       toast({
         title: "Sign up successful",
-        description: "Welcome to BeautyCut!",
+        description: `Welcome to BeautyCut, ${role === 'salon_owner' ? 'Salon Owner' : 'User'}!`,
       });
     } catch (error) {
       toast({

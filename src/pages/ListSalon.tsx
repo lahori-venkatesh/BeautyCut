@@ -20,9 +20,10 @@ import { AccessibilitySection } from "@/components/salon/AccessibilitySection";
 import { ServicesSection } from "@/components/salon/ServicesSection";
 import { StaffSection } from "@/components/salon/StaffSection";
 import { ArrowLeft } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { SalonOwnerSignUp } from "@/components/SalonOwnerSignUp";
 
 const formSchema = z.object({
-  // Basic Details
   salonName: z.string().min(2, { message: "Salon name must be at least 2 characters." }),
   address: z.string().min(5, { message: "Address must be at least 5 characters." }),
   city: z.string().min(2, { message: "City is required" }),
@@ -34,8 +35,6 @@ const formSchema = z.object({
   socialMedia: z.string().optional(),
   operatingHours: z.string().min(1, { message: "Operating hours are required" }),
   googleMapsLink: z.string().url().optional(),
-
-  // Services
   services: z.array(z.object({
     name: z.string(),
     description: z.string(),
@@ -43,8 +42,6 @@ const formSchema = z.object({
     duration: z.string(),
     experts: z.array(z.string())
   })),
-
-  // Staff
   staff: z.array(z.object({
     name: z.string(),
     role: z.string(),
@@ -52,32 +49,23 @@ const formSchema = z.object({
     image: z.any().optional(),
     rating: z.number().min(0).max(5)
   })),
-
-  // Gallery
   salonImages: z.any().array(),
   parkingImages: z.any().array(),
-
-  // Booking Features
   onlineBooking: z.boolean(),
   cancellationPolicy: z.string(),
   waitlistOptions: z.boolean(),
-
-  // Promotions
   currentOffers: z.string(),
   membershipPlans: z.string(),
-
-  // Accessibility
   parkingInfo: z.string(),
   accessibilityFeatures: z.string(),
   paymentMethods: z.string(),
-
-  // Safety Measures
   safetyMeasures: z.array(z.string()),
 });
 
 export default function ListSalon() {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -112,15 +100,33 @@ export default function ListSalon() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     console.log("Form submitted with values:", values);
     
-    // Here you would typically send the data to your backend
-    // For now, we'll just show a success message
     toast({
       title: "Salon Registration Successful",
       description: "Your salon has been listed successfully.",
     });
     
-    // Navigate to the salons page where the new listing should appear
     navigate("/salons");
+  }
+
+  if (!user || user.role !== 'salon_owner') {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center mb-6">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(-1)}
+            className="mr-4"
+          >
+            <ArrowLeft className="h-6 w-6" />
+          </Button>
+          <h1 className="text-3xl font-bold">List Your Salon</h1>
+        </div>
+        <div className="max-w-md mx-auto">
+          <SalonOwnerSignUp />
+        </div>
+      </div>
+    );
   }
 
   return (
