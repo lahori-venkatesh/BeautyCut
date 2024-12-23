@@ -6,6 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 const FEATURED_SALONS = [
   {
+    id: "1",
     name: "Style Studio Hyderabad",
     image: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80",
     rating: 4.8,
@@ -13,6 +14,7 @@ const FEATURED_SALONS = [
     services: ["Haircut", "Color", "Styling"],
   },
   {
+    id: "2",
     name: "Bangalore Beauty Lounge",
     image: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80",
     rating: 4.9,
@@ -20,6 +22,7 @@ const FEATURED_SALONS = [
     services: ["Facial", "Massage", "Nails"],
   },
   {
+    id: "3",
     name: "Hyderabad Hair Hub",
     image: "https://images.unsplash.com/photo-1633681926022-84c23e8cb2d6?auto=format&fit=crop&w=800&q=80",
     rating: 4.7,
@@ -27,6 +30,7 @@ const FEATURED_SALONS = [
     services: ["Haircut", "Beard Trim", "Styling"],
   },
   {
+    id: "4",
     name: "Bangalore Glamour",
     image: "https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=800&q=80",
     rating: 4.9,
@@ -34,6 +38,7 @@ const FEATURED_SALONS = [
     services: ["Makeup", "Hair Styling", "Bridal"],
   },
   {
+    id: "5",
     name: "Royal Spa Hyderabad",
     image: "https://images.unsplash.com/photo-1600948836101-f9ffda59d250?auto=format&fit=crop&w=800&q=80",
     rating: 4.8,
@@ -41,6 +46,7 @@ const FEATURED_SALONS = [
     services: ["Massage", "Facial", "Body Treatments"],
   },
   {
+    id: "6",
     name: "Bangalore Barbers",
     image: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=800&q=80",
     rating: 4.6,

@@ -1,4 +1,4 @@
-import { MapPin, Phone, Mail, Car, WheelchairIcon } from "lucide-react";
+import { MapPin, Phone, Mail, Car, Accessibility } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const SalonInfo = ({ salon }: { salon: any }) => {
@@ -53,7 +53,7 @@ export const SalonInfo = ({ salon }: { salon: any }) => {
           </div>
 
           <div className="flex items-start gap-2">
-            <WheelchairIcon className="w-5 h-5 mt-1 text-primary" />
+            <Accessibility className="w-5 h-5 mt-1 text-primary" />
             <div>
               <h3 className="font-semibold">Accessibility</h3>
               <p className="text-sm text-gray-600">Wheelchair accessible</p>
