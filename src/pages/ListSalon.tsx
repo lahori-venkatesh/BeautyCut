@@ -19,6 +19,7 @@ import { PromotionsSection } from "@/components/salon/PromotionsSection";
 import { AccessibilitySection } from "@/components/salon/AccessibilitySection";
 import { ServicesSection } from "@/components/salon/ServicesSection";
 import { StaffSection } from "@/components/salon/StaffSection";
+import { ArrowLeft } from "lucide-react";
 
 const formSchema = z.object({
   // Basic Details
@@ -124,7 +125,17 @@ export default function ListSalon() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">List Your Salon</h1>
+      <div className="flex items-center mb-6">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate(-1)}
+          className="mr-4"
+        >
+          <ArrowLeft className="h-6 w-6" />
+        </Button>
+        <h1 className="text-3xl font-bold">List Your Salon</h1>
+      </div>
       <div className="max-w-4xl mx-auto">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
