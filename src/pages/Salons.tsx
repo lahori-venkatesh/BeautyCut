@@ -115,30 +115,16 @@ const MOCK_SALONS: Salon[] = [
 const Salons = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("name");
-  const [salons, setSalons] = useState<Salon[]>(MOCK_SALONS);
+  const [salons, setSalons] = useState<Salon[]>([]);
   const [userLocation, setUserLocation] = useState<GeolocationCoordinates | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
-    // Get user's location if they're logged in
-    if (user) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation(position.coords);
-          console.log("User location obtained:", position.coords);
-        },
-        (error) => {
-          console.error("Error getting location:", error);
-          toast({
-            title: "Location Access Failed",
-            description: "Please enable location access for better salon recommendations",
-            variant: "destructive",
-          });
-        }
-      );
-    }
-  }, [user, toast]);
+    // Load salons from localStorage and combine with mock data
+    const savedSalons = JSON.parse(localStorage.getItem('salons') || '[]');
+    setSalons([...MOCK_SALONS, ...savedSalons]);
+  }, []);
 
   // Calculate distance between two points using Haversine formula
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
@@ -155,7 +141,7 @@ const Salons = () => {
 
   // Filter and sort salons
   useEffect(() => {
-    let filteredSalons = [...MOCK_SALONS];
+    let filteredSalons = [...salons];
 
     // Apply search filter
     if (searchTerm) {

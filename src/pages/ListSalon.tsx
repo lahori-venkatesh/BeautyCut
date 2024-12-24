@@ -94,15 +94,34 @@ export default function ListSalon() {
     console.log("Form submitted with values:", values);
     
     try {
-      // Here you would typically make an API call to save the salon data
-      // For now, we'll just show a success message and redirect
+      // Save salon data to localStorage for demo purposes
+      // In a real app, this would be saved to a backend
+      const existingSalons = JSON.parse(localStorage.getItem('salons') || '[]');
+      const newSalon = {
+        id: Date.now().toString(),
+        name: values.salonName,
+        image: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80", // Default image
+        rating: 5.0,
+        location: `${values.address}, ${values.city}, ${values.state}`,
+        services: values.services?.map(s => s.name) || [],
+        operatingHours: values.operatingHours,
+        parkingInfo: values.parkingInfo,
+        accessibilityFeatures: values.accessibilityFeatures,
+        paymentMethods: values.paymentMethods,
+        cancellationPolicy: values.cancellationPolicy,
+        currentOffers: values.currentOffers,
+        membershipPlans: values.membershipPlans,
+        staff: values.staff || [],
+        ownerId: user?.id
+      };
+      
+      localStorage.setItem('salons', JSON.stringify([...existingSalons, newSalon]));
       
       toast({
         title: "Salon Registration Successful",
         description: "Your salon has been listed successfully.",
       });
       
-      // Redirect to the salon admin dashboard
       navigate("/salon-admin");
     } catch (error) {
       toast({
