@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const formSchema = z.object({
   salonName: z.string().min(2, { message: "Salon name must be at least 2 characters." }),
+  description: z.string().optional(),
   address: z.string().min(5, { message: "Address must be at least 5 characters." }),
   city: z.string().min(2, { message: "City is required" }),
   state: z.string().min(2, { message: "State is required" }),
@@ -65,6 +66,7 @@ export default function ListSalon() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       salonName: "",
+      description: "",
       address: "",
       city: "",
       state: "",
