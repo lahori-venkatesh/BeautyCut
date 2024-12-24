@@ -15,6 +15,7 @@ import { StaffSection } from "@/components/salon/StaffSection";
 import { BasicDetailsSection } from "@/components/salon/BasicDetailsSection";
 import { useAuth } from "@/contexts/AuthContext";
 import { SalonOwnerSignUp } from "@/components/SalonOwnerSignUp";
+import { supabase } from "@/integrations/supabase/client";
 
 const formSchema = z.object({
   salonName: z.string().min(2, { message: "Salon name must be at least 2 characters." }),
@@ -94,36 +95,33 @@ export default function ListSalon() {
     console.log("Form submitted with values:", values);
     
     try {
-      // Save salon data to localStorage for demo purposes
-      // In a real app, this would be saved to a backend
-      const existingSalons = JSON.parse(localStorage.getItem('salons') || '[]');
-      const newSalon = {
-        id: Date.now().toString(),
-        name: values.salonName,
-        image: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80", // Default image
-        rating: 5.0,
-        location: `${values.address}, ${values.city}, ${values.state}`,
-        services: values.services?.map(s => s.name) || [],
-        operatingHours: values.operatingHours,
-        parkingInfo: values.parkingInfo,
-        accessibilityFeatures: values.accessibilityFeatures,
-        paymentMethods: values.paymentMethods,
-        cancellationPolicy: values.cancellationPolicy,
-        currentOffers: values.currentOffers,
-        membershipPlans: values.membershipPlans,
-        staff: values.staff || [],
-        ownerId: user?.id
-      };
-      
-      localStorage.setItem('salons', JSON.stringify([...existingSalons, newSalon]));
+      // Insert salon data into Supabase
+      const { data: salon, error } = await supabase
+        .from('salons')
+        .insert([
+          {
+            name: values.salonName,
+            description: values.description || '',
+            location: `${values.address}, ${values.city}, ${values.state}`,
+            image_url: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80", // Default image
+            rating: 5.0,
+            services: values.services?.map(s => s.name) || [],
+          }
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
       
       toast({
         title: "Salon Registration Successful",
         description: "Your salon has been listed successfully.",
       });
       
+      // Navigate to the salon admin dashboard
       navigate("/salon-admin");
     } catch (error) {
+      console.error('Error submitting salon:', error);
       toast({
         title: "Error",
         description: "Failed to submit salon listing. Please try again.",
