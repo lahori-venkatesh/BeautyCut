@@ -93,12 +93,24 @@ export default function ListSalon() {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     console.log("Form submitted with values:", values);
     
-    toast({
-      title: "Salon Registration Successful",
-      description: "Your salon has been listed successfully.",
-    });
-    
-    navigate("/salon-admin");
+    try {
+      // Here you would typically make an API call to save the salon data
+      // For now, we'll just show a success message and redirect
+      
+      toast({
+        title: "Salon Registration Successful",
+        description: "Your salon has been listed successfully.",
+      });
+      
+      // Redirect to the salon admin dashboard
+      navigate("/salon-admin");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to submit salon listing. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (!user || user.role !== 'salon_owner') {
@@ -145,7 +157,13 @@ export default function ListSalon() {
             <BookingFeatures form={form} />
             <PromotionsSection form={form} />
             <AccessibilitySection form={form} />
-            <Button type="submit" className="w-full">Submit Salon Listing</Button>
+            <Button 
+              type="submit" 
+              className="w-full"
+              onClick={() => console.log("Submit button clicked")}
+            >
+              Submit Salon Listing
+            </Button>
           </form>
         </Form>
       </div>
