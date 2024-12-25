@@ -13,25 +13,32 @@ export function useProfileData() {
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
+      console.log("Fetching profile for user ID:", user?.id);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user?.id)
-        .single();
+        .maybeSingle();
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching profile:", error);
+        throw error;
+      }
+
+      console.log("Profile data received:", data);
       return data;
     },
     enabled: !!user?.id,
     meta: {
       onSuccess: (data: any) => {
-        setNewName(data.full_name || "");
+        setNewName(data?.full_name || "");
       }
     }
   });
 
   const updateProfileMutation = useMutation({
     mutationFn: async ({ full_name }: { full_name: string }) => {
+      console.log("Updating profile with name:", full_name);
       const { error } = await supabase
         .from('profiles')
         .update({ full_name })
@@ -46,6 +53,7 @@ export function useProfileData() {
 
   const uploadAvatarMutation = useMutation({
     mutationFn: async (file: File) => {
+      console.log("Uploading avatar file:", file.name);
       const fileExt = file.name.split('.').pop();
       const filePath = `${user?.id}/${crypto.randomUUID()}.${fileExt}`;
 
@@ -58,6 +66,8 @@ export function useProfileData() {
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
+
+      console.log("Avatar uploaded, public URL:", publicUrl);
 
       const { error: updateError } = await supabase
         .from('profiles')
