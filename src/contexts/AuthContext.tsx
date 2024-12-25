@@ -23,7 +23,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const { toast } = useToast();
 
-  // Initialize session
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
@@ -58,19 +57,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const createOrUpdateProfile = async (userId: string, name: string, email: string) => {
     console.log("Creating/updating profile for user:", userId);
-    const { error } = await supabase
-      .from('profiles')
-      .upsert({
-        id: userId,
-        full_name: name,
-        email: email,
-        avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
-      }, {
-        onConflict: 'id'
-      });
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: userId,
+          full_name: name,
+          email: email,
+          avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
+        }, {
+          onConflict: 'id'
+        });
 
-    if (error) {
-      console.error("Error creating/updating profile:", error);
+      if (error) {
+        console.error("Error creating/updating profile:", error);
+        throw error;
+      }
+    } catch (error) {
+      console.error("Error in createOrUpdateProfile:", error);
       throw error;
     }
   };
@@ -160,13 +164,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           role: role
         };
 
-        await createOrUpdateProfile(data.user.id, name, email);
-        setUser(userData);
+        try {
+          await createOrUpdateProfile(data.user.id, name, email);
+          setUser(userData);
 
-        toast({
-          title: "Sign up successful",
-          description: `Welcome to BeautyCut, ${role === 'salon_owner' ? 'Salon Owner' : 'User'}!`,
-        });
+          toast({
+            title: "Sign up successful",
+            description: `Welcome to BeautyCut, ${role === 'salon_owner' ? 'Salon Owner' : 'User'}!`,
+          });
+        } catch (profileError) {
+          console.error("Error creating profile:", profileError);
+          toast({
+            title: "Profile creation failed",
+            description: "Your account was created but we couldn't set up your profile. Please try logging in.",
+            variant: "destructive",
+          });
+        }
       }
     } catch (error) {
       console.error("Signup error:", error);
