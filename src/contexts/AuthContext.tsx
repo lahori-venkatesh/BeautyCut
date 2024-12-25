@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -23,6 +23,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const { toast } = useToast();
 
+  // Initialize session
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          name: session.user.user_metadata.name || '',
+          email: session.user.email || '',
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${session.user.email}`,
+          role: session.user.user_metadata.role || 'user'
+        });
+      }
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          name: session.user.user_metadata.name || '',
+          email: session.user.email || '',
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${session.user.email}`,
+          role: session.user.user_metadata.role || 'user'
+        });
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   const createOrUpdateProfile = async (userId: string, name: string, email: string) => {
     console.log("Creating/updating profile for user:", userId);
     const { error } = await supabase
@@ -44,23 +77,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string, role: 'user' | 'salon_owner') => {
     try {
-      // Simulate API call with a proper UUID format
-      const mockUser = {
-        id: '123e4567-e89b-12d3-a456-426614174000',
-        name: role === 'salon_owner' ? 'Salon Owner' : 'John Doe',
-        email: email,
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
-        role: role
-      };
-
-      // Create or update the profile in Supabase
-      await createOrUpdateProfile(mockUser.id, mockUser.name, email);
-
-      setUser(mockUser);
-      toast({
-        title: "Login successful",
-        description: `Welcome back, ${role === 'salon_owner' ? 'Salon Owner' : 'User'}!`,
+      const { data: { user: authUser }, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
+
+      if (error) throw error;
+
+      if (authUser) {
+        const userData = {
+          id: authUser.id,
+          name: authUser.user_metadata.name || '',
+          email: authUser.email || '',
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
+          role: role
+        };
+
+        await createOrUpdateProfile(authUser.id, userData.name, email);
+        setUser(userData);
+
+        toast({
+          title: "Login successful",
+          description: `Welcome back, ${role === 'salon_owner' ? 'Salon Owner' : 'User'}!`,
+        });
+      }
     } catch (error) {
       console.error("Login error:", error);
       toast({
@@ -73,22 +113,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signup = async (name: string, email: string, password: string, role: 'user' | 'salon_owner') => {
     try {
-      const mockUser = {
-        id: '123e4567-e89b-12d3-a456-426614174000',
-        name: name,
-        email: email,
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
-        role: role
-      };
-
-      // Create or update the profile in Supabase
-      await createOrUpdateProfile(mockUser.id, name, email);
-
-      setUser(mockUser);
-      toast({
-        title: "Sign up successful",
-        description: `Welcome to BeautyCut, ${role === 'salon_owner' ? 'Salon Owner' : 'User'}!`,
+      const { data: { user: authUser }, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: name,
+            role: role,
+          },
+        },
       });
+
+      if (error) throw error;
+
+      if (authUser) {
+        const userData = {
+          id: authUser.id,
+          name: name,
+          email: email,
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
+          role: role
+        };
+
+        await createOrUpdateProfile(authUser.id, name, email);
+        setUser(userData);
+
+        toast({
+          title: "Sign up successful",
+          description: `Welcome to BeautyCut, ${role === 'salon_owner' ? 'Salon Owner' : 'User'}!`,
+        });
+      }
     } catch (error) {
       console.error("Signup error:", error);
       toast({
@@ -99,7 +153,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
     toast({
       title: "Logged out",
