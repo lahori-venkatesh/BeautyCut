@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface User {
   id: string;
@@ -22,22 +23,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const { toast } = useToast();
 
+  const createOrUpdateProfile = async (userId: string, name: string, email: string) => {
+    console.log("Creating/updating profile for user:", userId);
+    const { error } = await supabase
+      .from('profiles')
+      .upsert({
+        id: userId,
+        full_name: name,
+        email: email,
+        avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
+      }, {
+        onConflict: 'id'
+      });
+
+    if (error) {
+      console.error("Error creating/updating profile:", error);
+      throw error;
+    }
+  };
+
   const login = async (email: string, password: string, role: 'user' | 'salon_owner') => {
     try {
       // Simulate API call with a proper UUID format
       const mockUser = {
-        id: '123e4567-e89b-12d3-a456-426614174000', // Using proper UUID format
+        id: '123e4567-e89b-12d3-a456-426614174000',
         name: role === 'salon_owner' ? 'Salon Owner' : 'John Doe',
         email: email,
         avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
         role: role
       };
+
+      // Create or update the profile in Supabase
+      await createOrUpdateProfile(mockUser.id, mockUser.name, email);
+
       setUser(mockUser);
       toast({
         title: "Login successful",
         description: `Welcome back, ${role === 'salon_owner' ? 'Salon Owner' : 'User'}!`,
       });
     } catch (error) {
+      console.error("Login error:", error);
       toast({
         title: "Login failed",
         description: "Please check your credentials and try again",
@@ -49,18 +74,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signup = async (name: string, email: string, password: string, role: 'user' | 'salon_owner') => {
     try {
       const mockUser = {
-        id: '123e4567-e89b-12d3-a456-426614174000', // Using proper UUID format
+        id: '123e4567-e89b-12d3-a456-426614174000',
         name: name,
         email: email,
         avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
         role: role
       };
+
+      // Create or update the profile in Supabase
+      await createOrUpdateProfile(mockUser.id, name, email);
+
       setUser(mockUser);
       toast({
         title: "Sign up successful",
         description: `Welcome to BeautyCut, ${role === 'salon_owner' ? 'Salon Owner' : 'User'}!`,
       });
     } catch (error) {
+      console.error("Signup error:", error);
       toast({
         title: "Sign up failed",
         description: "Please try again",
