@@ -1,119 +1,70 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
+import { useProfileData } from "@/hooks/useProfileData";
 
 export default function Profile() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
-  const [newName, setNewName] = useState("");
-
-  console.log("Profile page - Current user:", user);
-
-  const { data: profile, isLoading } = useQuery({
-    queryKey: ['profile', user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user?.id)
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!user?.id,
-    onSuccess: (data) => {
-      setNewName(data.full_name || "");
-    }
-  });
-
-  const updateProfileMutation = useMutation({
-    mutationFn: async ({ full_name }: { full_name: string }) => {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ full_name })
-        .eq('id', user?.id);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
-      setIsEditing(false);
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been updated successfully.",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to update profile. Please try again.",
-        variant: "destructive",
-      });
-      console.error("Error updating profile:", error);
-    },
-  });
-
-  const uploadAvatarMutation = useMutation({
-    mutationFn: async (file: File) => {
-      const fileExt = file.name.split('.').pop();
-      const filePath = `${user?.id}/${crypto.randomUUID()}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
-
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ avatar_url: publicUrl })
-        .eq('id', user?.id);
-
-      if (updateError) throw updateError;
-
-      return publicUrl;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
-      toast({
-        title: "Avatar updated",
-        description: "Your avatar has been updated successfully.",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to upload avatar. Please try again.",
-        variant: "destructive",
-      });
-      console.error("Error uploading avatar:", error);
-    },
-  });
+  const {
+    profile,
+    isLoading,
+    newName,
+    setNewName,
+    updateProfileMutation,
+    uploadAvatarMutation
+  } = useProfileData();
 
   const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      uploadAvatarMutation.mutate(file);
+      uploadAvatarMutation.mutate(file, {
+        onSuccess: () => {
+          toast({
+            title: "Avatar updated",
+            description: "Your avatar has been updated successfully.",
+          });
+        },
+        onError: (error) => {
+          toast({
+            title: "Error",
+            description: "Failed to upload avatar. Please try again.",
+            variant: "destructive",
+          });
+          console.error("Error uploading avatar:", error);
+        }
+      });
     }
   };
 
   const handleNameUpdate = () => {
     if (newName.trim()) {
-      updateProfileMutation.mutate({ full_name: newName.trim() });
+      updateProfileMutation.mutate(
+        { full_name: newName.trim() },
+        {
+          onSuccess: () => {
+            setIsEditing(false);
+            toast({
+              title: "Profile updated",
+              description: "Your profile has been updated successfully.",
+            });
+          },
+          onError: (error) => {
+            toast({
+              title: "Error",
+              description: "Failed to update profile. Please try again.",
+              variant: "destructive",
+            });
+            console.error("Error updating profile:", error);
+          }
+        }
+      );
     }
   };
 
