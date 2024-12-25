@@ -77,23 +77,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string, role: 'user' | 'salon_owner') => {
     try {
-      const { data: { user: authUser }, error } = await supabase.auth.signInWithPassword({
+      console.log("Attempting login with email:", email, "and role:", role);
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Login error details:", error);
+        if (error.message === "Invalid login credentials") {
+          toast({
+            title: "Login failed",
+            description: "Email or password is incorrect. Please try again.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Login failed",
+            description: "An unexpected error occurred. Please try again.",
+            variant: "destructive",
+          });
+        }
+        throw error;
+      }
 
-      if (authUser) {
+      if (data.user) {
+        console.log("Login successful, user data:", data.user);
         const userData = {
-          id: authUser.id,
-          name: authUser.user_metadata.name || '',
-          email: authUser.email || '',
+          id: data.user.id,
+          name: data.user.user_metadata.name || '',
+          email: data.user.email || '',
           avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
           role: role
         };
 
-        await createOrUpdateProfile(authUser.id, userData.name, email);
+        await createOrUpdateProfile(data.user.id, userData.name, email);
         setUser(userData);
 
         toast({
@@ -103,17 +122,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error("Login error:", error);
-      toast({
-        title: "Login failed",
-        description: "Please check your credentials and try again",
-        variant: "destructive",
-      });
     }
   };
 
   const signup = async (name: string, email: string, password: string, role: 'user' | 'salon_owner') => {
     try {
-      const { data: { user: authUser }, error } = await supabase.auth.signUp({
+      console.log("Attempting signup with email:", email, "and role:", role);
+      
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -124,18 +140,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Signup error details:", error);
+        toast({
+          title: "Sign up failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        throw error;
+      }
 
-      if (authUser) {
+      if (data.user) {
+        console.log("Signup successful, user data:", data.user);
         const userData = {
-          id: authUser.id,
+          id: data.user.id,
           name: name,
           email: email,
           avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
           role: role
         };
 
-        await createOrUpdateProfile(authUser.id, name, email);
+        await createOrUpdateProfile(data.user.id, name, email);
         setUser(userData);
 
         toast({
@@ -145,11 +170,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error("Signup error:", error);
-      toast({
-        title: "Sign up failed",
-        description: "Please try again",
-        variant: "destructive",
-      });
     }
   };
 
