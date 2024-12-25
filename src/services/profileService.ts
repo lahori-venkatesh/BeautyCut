@@ -1,10 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export const createOrUpdateProfile = async (userId: string, name: string, email: string) => {
-  console.log("Creating/updating profile for user:", userId);
+  console.log("Creating/updating profile for user:", { userId, name, email });
   
   try {
-    // First check if profile exists using maybeSingle()
+    // First check if profile exists
     const { data: existingProfile, error: fetchError } = await supabase
       .from('profiles')
       .select('*')
@@ -17,7 +17,7 @@ export const createOrUpdateProfile = async (userId: string, name: string, email:
     }
 
     if (existingProfile) {
-      console.log("Profile exists, updating...");
+      console.log("Profile exists, updating...", existingProfile);
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
@@ -35,12 +35,12 @@ export const createOrUpdateProfile = async (userId: string, name: string, email:
       console.log("Creating new profile...");
       const { error: insertError } = await supabase
         .from('profiles')
-        .insert({
+        .insert([{
           id: userId,
           full_name: name,
           email: email,
           avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
-        });
+        }]);
 
       if (insertError) {
         console.error("Error creating profile:", insertError);
@@ -48,6 +48,7 @@ export const createOrUpdateProfile = async (userId: string, name: string, email:
       }
     }
 
+    console.log("Profile operation completed successfully");
     return true;
   } catch (error) {
     console.error("Error in createOrUpdateProfile:", error);
