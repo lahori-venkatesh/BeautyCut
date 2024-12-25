@@ -3,46 +3,54 @@ import { supabase } from "@/integrations/supabase/client";
 export const createOrUpdateProfile = async (userId: string, name: string, email: string) => {
   console.log("Creating/updating profile for user:", userId);
   
-  // Wait for session to be established
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  const { data: existingProfile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single();
-
-  if (existingProfile) {
-    console.log("Profile already exists, updating...");
-    const { error } = await supabase
+  try {
+    // First check if profile exists using maybeSingle()
+    const { data: existingProfile, error: fetchError } = await supabase
       .from('profiles')
-      .update({
-        full_name: name,
-        email: email,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', userId);
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle();
 
-    if (error) {
-      console.error("Error updating profile:", error);
-      throw error;
+    if (fetchError) {
+      console.error("Error fetching profile:", fetchError);
+      throw fetchError;
     }
-  } else {
-    console.log("Creating new profile...");
-    const { error } = await supabase
-      .from('profiles')
-      .insert({
-        id: userId,
-        full_name: name,
-        email: email,
-        avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
-      });
 
-    if (error) {
-      console.error("Error creating profile:", error);
-      throw error;
+    if (existingProfile) {
+      console.log("Profile exists, updating...");
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          full_name: name,
+          email: email,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', userId);
+
+      if (updateError) {
+        console.error("Error updating profile:", updateError);
+        throw updateError;
+      }
+    } else {
+      console.log("Creating new profile...");
+      const { error: insertError } = await supabase
+        .from('profiles')
+        .insert({
+          id: userId,
+          full_name: name,
+          email: email,
+          avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
+        });
+
+      if (insertError) {
+        console.error("Error creating profile:", insertError);
+        throw insertError;
+      }
     }
+
+    return true;
+  } catch (error) {
+    console.error("Error in createOrUpdateProfile:", error);
+    throw error;
   }
-
-  return true;
 };
