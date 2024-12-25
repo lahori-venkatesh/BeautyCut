@@ -7,10 +7,13 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
 import { useProfileData } from "@/hooks/useProfileData";
+import { ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function Profile() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const {
     profile,
@@ -78,6 +81,14 @@ export default function Profile() {
 
   return (
     <div className="container mx-auto py-8">
+      <Button 
+        variant="ghost" 
+        className="mb-4" 
+        onClick={() => navigate(-1)}
+      >
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back
+      </Button>
       <Card>
         <CardHeader>
           <CardTitle>Profile</CardTitle>
