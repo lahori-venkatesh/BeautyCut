@@ -3,9 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { SalonCard } from "@/components/SalonCard";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function Favorites() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   console.log("Favorites page - Current user:", user);
 
   const { data: favorites, isLoading } = useQuery({
@@ -29,6 +33,14 @@ export default function Favorites() {
 
   return (
     <div className="container mx-auto py-8">
+      <Button 
+        variant="ghost" 
+        className="mb-4" 
+        onClick={() => navigate(-1)}
+      >
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back
+      </Button>
       <Card>
         <CardHeader>
           <CardTitle>My Favorite Salons</CardTitle>
