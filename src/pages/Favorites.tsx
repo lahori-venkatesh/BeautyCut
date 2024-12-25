@@ -39,7 +39,15 @@ export default function Favorites() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {favorites?.map((favorite) => (
-                <SalonCard key={favorite.salon.id} salon={favorite.salon} />
+                <SalonCard 
+                  key={favorite.salon.id}
+                  id={favorite.salon.id}
+                  name={favorite.salon.name}
+                  image={favorite.salon.image_url || '/placeholder.svg'}
+                  rating={favorite.salon.rating || 0}
+                  location={favorite.salon.location}
+                  services={favorite.salon.services || []}
+                />
               ))}
             </div>
           )}

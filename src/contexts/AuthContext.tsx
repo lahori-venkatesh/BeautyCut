@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 
 interface User {
@@ -24,9 +24,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string, role: 'user' | 'salon_owner') => {
     try {
-      // Simulate API call
+      // Simulate API call with a proper UUID format
       const mockUser = {
-        id: '1',
+        id: '123e4567-e89b-12d3-a456-426614174000', // Using proper UUID format
         name: role === 'salon_owner' ? 'Salon Owner' : 'John Doe',
         email: email,
         avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
@@ -49,7 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signup = async (name: string, email: string, password: string, role: 'user' | 'salon_owner') => {
     try {
       const mockUser = {
-        id: '1',
+        id: '123e4567-e89b-12d3-a456-426614174000', // Using proper UUID format
         name: name,
         email: email,
         avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
