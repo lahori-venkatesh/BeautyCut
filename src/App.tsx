@@ -8,6 +8,9 @@ import Index from "./pages/Index";
 import ListSalon from "./pages/ListSalon";
 import SignUp from "./pages/SignUp";
 import Salons from "./pages/Salons";
+import Profile from "./pages/Profile";
+import MyBookings from "./pages/MyBookings";
+import Favorites from "./pages/Favorites";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +27,9 @@ const App = () => (
             <Route path="/about" element={<Index />} />
             <Route path="/list-salon" element={<ListSalon />} />
             <Route path="/signup" element={<SignUp />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/bookings" element={<MyBookings />} />
+            <Route path="/favorites" element={<Favorites />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
