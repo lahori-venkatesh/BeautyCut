@@ -13,11 +13,16 @@ export function useProfileData() {
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
-      console.log("Fetching profile for user ID:", user?.id);
+      if (!user?.id) {
+        console.error("No user ID available for profile fetch");
+        return null;
+      }
+
+      console.log("Fetching profile for user ID:", user.id);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user?.id)
+        .eq('id', user.id)
         .maybeSingle();
       
       if (error) {
@@ -28,21 +33,20 @@ export function useProfileData() {
       console.log("Profile data received:", data);
       return data;
     },
-    enabled: !!user?.id,
-    meta: {
-      onSuccess: (data: any) => {
-        setNewName(data?.full_name || "");
-      }
-    }
+    enabled: !!user?.id, // Only run query when we have a user ID
   });
 
   const updateProfileMutation = useMutation({
     mutationFn: async ({ full_name }: { full_name: string }) => {
+      if (!user?.id) {
+        throw new Error("No user ID available for profile update");
+      }
+
       console.log("Updating profile with name:", full_name);
       const { error } = await supabase
         .from('profiles')
         .update({ full_name })
-        .eq('id', user?.id);
+        .eq('id', user.id);
 
       if (error) throw error;
     },
@@ -53,9 +57,13 @@ export function useProfileData() {
 
   const uploadAvatarMutation = useMutation({
     mutationFn: async (file: File) => {
+      if (!user?.id) {
+        throw new Error("No user ID available for avatar upload");
+      }
+
       console.log("Uploading avatar file:", file.name);
       const fileExt = file.name.split('.').pop();
-      const filePath = `${user?.id}/${crypto.randomUUID()}.${fileExt}`;
+      const filePath = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
@@ -72,7 +80,7 @@ export function useProfileData() {
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ avatar_url: publicUrl })
-        .eq('id', user?.id);
+        .eq('id', user.id);
 
       if (updateError) throw updateError;
 
