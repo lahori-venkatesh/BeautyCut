@@ -8,6 +8,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [lastSignupAttempt, setLastSignupAttempt] = useState<number>(0);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -84,6 +85,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signup = async (name: string, email: string, password: string, role: 'user' | 'salon_owner') => {
     try {
+      // Check if enough time has passed since the last attempt
+      const now = Date.now();
+      const timeSinceLastAttempt = now - lastSignupAttempt;
+      if (timeSinceLastAttempt < 40000) { // 40 seconds in milliseconds
+        const remainingTime = Math.ceil((40000 - timeSinceLastAttempt) / 1000);
+        toast({
+          title: "Please wait",
+          description: `You can try again in ${remainingTime} seconds`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setLastSignupAttempt(now);
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -95,7 +111,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes('rate_limit')) {
+          toast({
+            title: "Too many attempts",
+            description: "Please wait 40 seconds before trying again",
+            variant: "destructive",
+          });
+          return;
+        }
+        throw error;
+      }
 
       if (data.user) {
         // Wait for the session to be established
