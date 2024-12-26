@@ -42,12 +42,16 @@ const formSchema = z.object({
     rating: z.number().min(0).max(5)
   })),
   salonImages: z.array(z.any()).min(1, "At least one salon image is required"),
+  parkingImages: z.array(z.any()),
   parkingInfo: z.string().min(1, "Parking information is required"),
   accessibilityFeatures: z.string().min(1, "Accessibility features are required"),
   paymentMethods: z.string().min(1, "Payment methods are required"),
   cancellationPolicy: z.string().min(1, "Cancellation policy is required"),
   currentOffers: z.string().optional(),
   membershipPlans: z.string().optional(),
+  onlineBooking: z.boolean().optional(),
+  waitlistOptions: z.boolean().optional(),
+  safetyMeasures: z.array(z.string()).optional(),
 });
 
 export default function ListSalon() {
@@ -66,10 +70,7 @@ export default function ListSalon() {
       zipCode: "",
       phone: "",
       email: "",
-      website: "",
-      socialMedia: "",
       operatingHours: "",
-      googleMapsLink: "",
       services: [],
       staff: [],
       salonImages: [],
