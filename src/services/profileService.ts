@@ -4,54 +4,30 @@ export const createOrUpdateProfile = async (userId: string, name: string, email:
   console.log("Creating/updating profile for user:", { userId, name, email });
   
   try {
-    // First check if profile exists
-    const { data: existingProfile, error: fetchError } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .maybeSingle();
-
-    if (fetchError) {
-      console.error("Error fetching profile:", fetchError);
-      throw fetchError;
-    }
-
-    if (existingProfile) {
-      console.log("Profile exists, updating...", existingProfile);
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          full_name: name,
-          email: email,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', userId);
-
-      if (updateError) {
-        console.error("Error updating profile:", updateError);
-        throw updateError;
-      }
-    } else {
-      console.log("Creating new profile...");
-      const { error: insertError } = await supabase
-        .from('profiles')
-        .insert([{
+      .upsert(
+        {
           id: userId,
           full_name: name,
           email: email,
-          avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
-        }]);
+        },
+        {
+          onConflict: 'id'
+        }
+      )
+      .select('*')
+      .single();
 
-      if (insertError) {
-        console.error("Error creating profile:", insertError);
-        throw insertError;
-      }
+    if (error) {
+      console.error("Error in createOrUpdateProfile:", error);
+      throw error;
     }
 
-    console.log("Profile operation completed successfully");
-    return true;
+    console.log("Profile created/updated successfully:", data);
+    return data;
   } catch (error) {
-    console.error("Error in createOrUpdateProfile:", error);
+    console.error("Error creating profile:", error);
     throw error;
   }
 };

@@ -12,10 +12,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Initialize session
     const initSession = async () => {
+      console.log("Initializing session...");
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
+        console.log("Session found:", session.user);
         setUser({
           id: session.user.id,
           name: session.user.user_metadata.name || '',
@@ -30,7 +31,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      console.log("Auth state changed:", _event, session?.user);
       if (session?.user) {
         setUser({
           id: session.user.id,
@@ -49,14 +51,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string, role: 'user' | 'salon_owner') => {
     try {
+      console.log("Attempting login for:", email, "with role:", role);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Login error:", error);
+        throw error;
+      }
 
       if (data.user) {
+        console.log("Login successful:", data.user);
         const userData = {
           id: data.user.id,
           name: data.user.user_metadata.name || '',
@@ -65,9 +72,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           role: role
         };
 
-        await createOrUpdateProfile(data.user.id, userData.name, email);
-        setUser(userData);
+        // Update user metadata with role if it's different
+        if (data.user.user_metadata.role !== role) {
+          const { error: updateError } = await supabase.auth.updateUser({
+            data: { role: role }
+          });
 
+          if (updateError) {
+            console.error("Error updating user role:", updateError);
+          }
+        }
+
+        setUser(userData);
         toast({
           title: "Login successful",
           description: `Welcome back, ${role === 'salon_owner' ? 'Salon Owner' : 'User'}!`,
@@ -80,15 +96,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         description: error.message || "An unexpected error occurred",
         variant: "destructive",
       });
+      throw error;
     }
   };
 
   const signup = async (name: string, email: string, password: string, role: 'user' | 'salon_owner') => {
     try {
-      // Check if enough time has passed since the last attempt
+      console.log("Attempting signup for:", email, "with role:", role);
       const now = Date.now();
       const timeSinceLastAttempt = now - lastSignupAttempt;
-      if (timeSinceLastAttempt < 40000) { // 40 seconds in milliseconds
+      if (timeSinceLastAttempt < 40000) {
         const remainingTime = Math.ceil((40000 - timeSinceLastAttempt) / 1000);
         toast({
           title: "Please wait",
@@ -112,21 +129,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) {
-        if (error.message.includes('rate_limit')) {
-          toast({
-            title: "Too many attempts",
-            description: "Please wait 40 seconds before trying again",
-            variant: "destructive",
-          });
-          return;
-        }
+        console.error("Signup error:", error);
         throw error;
       }
 
       if (data.user) {
-        // Wait for the session to be established
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
+        console.log("Signup successful:", data.user);
         const userData = {
           id: data.user.id,
           name: name,
@@ -159,10 +167,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         description: error.message || "An unexpected error occurred",
         variant: "destructive",
       });
+      throw error;
     }
   };
 
   const logout = async () => {
+    console.log("Logging out...");
     await supabase.auth.signOut();
     setUser(null);
     toast({
