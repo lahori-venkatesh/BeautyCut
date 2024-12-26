@@ -1,10 +1,71 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { useState } from "react";
+import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 export const SalonServices = ({ salon }: { salon: any }) => {
   console.log("Rendering SalonServices component");
+  const [selectedDate, setSelectedDate] = useState<Date>();
+  const [selectedService, setSelectedService] = useState<any>(null);
+  const { toast } = useToast();
+  const { user } = useAuth();
   
+  const handleBooking = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to book an appointment",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!selectedDate || !selectedService) {
+      toast({
+        title: "Incomplete Booking",
+        description: "Please select both a date and time slot",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase.from('bookings').insert({
+        user_id: user.id,
+        salon_id: salon.id,
+        service: selectedService.name,
+        booking_date: selectedDate.toISOString(),
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Booking Successful",
+        description: `Your appointment for ${selectedService.name} has been booked for ${format(selectedDate, 'PPP')}`,
+      });
+    } catch (error) {
+      console.error('Booking error:', error);
+      toast({
+        title: "Booking Failed",
+        description: "There was an error booking your appointment. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const serviceCategories = {
     grooming: {
       title: "Grooming Services",
@@ -121,43 +182,68 @@ export const SalonServices = ({ salon }: { salon: any }) => {
     <div className="container mx-auto px-4 py-6 space-y-12">
       {Object.entries(serviceCategories).map(([category, { title, services }]) => (
         <div key={category} className="space-y-6">
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-col items-center space-y-2">
             <h2 className="text-2xl font-semibold text-primary">{title}</h2>
-            <Separator className="flex-grow" />
+            <Separator className="w-24" />
           </div>
           
           <div className="grid gap-6 md:grid-cols-2">
             {services.map((service, index) => (
-              <Card 
-                key={index} 
-                className="border-none shadow-sm hover:shadow-md transition-shadow duration-200"
-              >
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between items-start">
-                    <div className="space-y-1">
-                      <CardTitle className="text-lg font-medium">{service.name}</CardTitle>
-                      <p className="text-sm text-muted-foreground">{service.description}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-lg font-semibold text-primary">{service.price}</p>
-                      <p className="text-xs text-muted-foreground">{service.duration}</p>
-                    </div>
+              <Dialog key={index}>
+                <DialogTrigger asChild>
+                  <Card 
+                    className="border-2 border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer hover:border-primary/20"
+                  >
+                    <CardHeader className="pb-2">
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-1">
+                          <CardTitle className="text-lg font-medium">{service.name}</CardTitle>
+                          <p className="text-sm text-muted-foreground">{service.description}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-lg font-semibold text-primary">{service.price}</p>
+                          <p className="text-xs text-muted-foreground">{service.duration}</p>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-wrap gap-2">
+                        {service.experts.map((expert, i) => (
+                          <Badge 
+                            key={i} 
+                            variant="secondary"
+                            className="text-xs font-normal"
+                          >
+                            {expert}
+                          </Badge>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>Book {service.name}</DialogTitle>
+                  </DialogHeader>
+                  <div className="py-4">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={(date) => {
+                        setSelectedDate(date);
+                        setSelectedService(service);
+                      }}
+                      className="rounded-md border"
+                      disabled={(date) => date < new Date()}
+                    />
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-2">
-                    {service.experts.map((expert, i) => (
-                      <Badge 
-                        key={i} 
-                        variant="secondary"
-                        className="text-xs font-normal"
-                      >
-                        {expert}
-                      </Badge>
-                    ))}
+                  <div className="flex justify-end">
+                    <Button onClick={handleBooking}>
+                      Book Appointment
+                    </Button>
                   </div>
-                </CardContent>
-              </Card>
+                </DialogContent>
+              </Dialog>
             ))}
           </div>
         </div>
