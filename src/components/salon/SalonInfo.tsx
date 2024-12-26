@@ -4,6 +4,13 @@ import { Button } from "@/components/ui/button";
 export const SalonInfo = ({ salon }: { salon: any }) => {
   console.log("Rendering SalonInfo component");
   
+  // Additional sample images for the salon gallery
+  const additionalImages = [
+    "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80",
+    "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80",
+    "https://images.unsplash.com/photo-1633681926022-84c23e8cb2d6?auto=format&fit=crop&w=800&q=80",
+  ];
+  
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -64,14 +71,24 @@ export const SalonInfo = ({ salon }: { salon: any }) => {
 
       <div className="space-y-4">
         <h3 className="font-semibold">Salon Photos</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {[1, 2, 3].map((index) => (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Main salon image */}
+          <div className="col-span-full md:col-span-2 aspect-video">
             <img
-              key={index}
-              src={`https://images.unsplash.com/photo-${index + 1}?auto=format&fit=crop&w=300&q=80`}
-              alt={`Salon interior ${index}`}
-              className="w-full h-40 object-cover rounded-lg"
+              src={salon.image}
+              alt={`${salon.name} main view`}
+              className="w-full h-full object-cover rounded-lg"
             />
+          </div>
+          {/* Additional images */}
+          {additionalImages.map((image, index) => (
+            <div key={index} className="aspect-square">
+              <img
+                src={image}
+                alt={`${salon.name} view ${index + 1}`}
+                className="w-full h-full object-cover rounded-lg"
+              />
+            </div>
           ))}
         </div>
       </div>
