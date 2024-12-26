@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 export const SalonServices = ({ salon }: { salon: any }) => {
   console.log("Rendering SalonServices component");
@@ -117,29 +118,40 @@ export const SalonServices = ({ salon }: { salon: any }) => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="container mx-auto px-4 py-6 space-y-12">
       {Object.entries(serviceCategories).map(([category, { title, services }]) => (
-        <div key={category} className="space-y-4">
-          <h2 className="text-2xl font-bold text-primary">{title}</h2>
-          <div className="grid gap-4">
+        <div key={category} className="space-y-6">
+          <div className="flex items-center space-x-4">
+            <h2 className="text-2xl font-semibold text-primary">{title}</h2>
+            <Separator className="flex-grow" />
+          </div>
+          
+          <div className="grid gap-6 md:grid-cols-2">
             {services.map((service, index) => (
-              <Card key={index} className="hover:shadow-md transition-shadow">
-                <CardHeader>
+              <Card 
+                key={index} 
+                className="border-none shadow-sm hover:shadow-md transition-shadow duration-200"
+              >
+                <CardHeader className="pb-2">
                   <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-lg">{service.name}</CardTitle>
-                      <p className="text-sm text-gray-500 mt-1">{service.description}</p>
+                    <div className="space-y-1">
+                      <CardTitle className="text-lg font-medium">{service.name}</CardTitle>
+                      <p className="text-sm text-muted-foreground">{service.description}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-primary">{service.price}</p>
-                      <p className="text-sm text-gray-500">{service.duration}</p>
+                      <p className="text-lg font-semibold text-primary">{service.price}</p>
+                      <p className="text-xs text-muted-foreground">{service.duration}</p>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-2">
                     {service.experts.map((expert, i) => (
-                      <Badge key={i} variant="secondary">
+                      <Badge 
+                        key={i} 
+                        variant="secondary"
+                        className="text-xs font-normal"
+                      >
                         {expert}
                       </Badge>
                     ))}
