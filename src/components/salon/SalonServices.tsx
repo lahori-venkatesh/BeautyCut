@@ -6,6 +6,7 @@ import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -17,7 +18,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
 export const SalonServices = ({ salon }: { salon: any }) => {
-  console.log("Rendering SalonServices component");
+  console.log("Rendering SalonServices component with salon:", salon);
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedService, setSelectedService] = useState<any>(null);
   const { toast } = useToast();
@@ -42,21 +43,44 @@ export const SalonServices = ({ salon }: { salon: any }) => {
       return;
     }
 
+    // Validate salon.id is present and is a valid UUID
+    if (!salon?.id || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(salon.id)) {
+      console.error("Invalid salon ID:", salon?.id);
+      toast({
+        title: "Booking Error",
+        description: "Invalid salon information. Please try again later.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      const { error } = await supabase.from('bookings').insert({
+      console.log("Attempting to create booking with data:", {
         user_id: user.id,
         salon_id: salon.id,
         service: selectedService.name,
         booking_date: selectedDate.toISOString(),
       });
 
-      if (error) throw error;
+      const { data, error } = await supabase.from('bookings').insert({
+        user_id: user.id,
+        salon_id: salon.id,
+        service: selectedService.name,
+        booking_date: selectedDate.toISOString(),
+      }).select();
+
+      if (error) {
+        console.error('Booking error:', error);
+        throw error;
+      }
+
+      console.log("Booking created successfully:", data);
 
       toast({
         title: "Booking Successful",
         description: `Your appointment for ${selectedService.name} has been booked for ${format(selectedDate, 'PPP')}`,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Booking error:', error);
       toast({
         title: "Booking Failed",
@@ -224,6 +248,9 @@ export const SalonServices = ({ salon }: { salon: any }) => {
                 <DialogContent className="sm:max-w-[425px]">
                   <DialogHeader>
                     <DialogTitle>Book {service.name}</DialogTitle>
+                    <DialogDescription>
+                      Select a date for your appointment
+                    </DialogDescription>
                   </DialogHeader>
                   <div className="py-4">
                     <Calendar
