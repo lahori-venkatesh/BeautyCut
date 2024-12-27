@@ -63,10 +63,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (data.user) {
         const profile = await fetchUserProfile(data.user.id);
-
+        
+        // Check if the user's role matches the requested role
         if (profile.role !== role) {
           await signOut();
-          throw new Error(`Invalid role. Please login as a ${role}.`);
+          throw new Error(`This account is not registered as a ${role.replace('_', ' ')}. Please login with the correct account type.`);
         }
 
         setUser(mapProfileToUser(profile, data.user.email || ''));
