@@ -1,99 +1,140 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useToast } from "@/hooks/use-toast";
+import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { User, AuthContextType } from "@/types/auth";
-import { createOrUpdateProfile } from "@/services/profileService";
+import { useToast } from "@/hooks/use-toast";
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: 'user' | 'salon_owner';
+  avatar?: string;
+}
+
+interface AuthContextType {
+  user: User | null;
+  login: (email: string, password: string, role: 'user' | 'salon_owner') => Promise<void>;
+  signup: (name: string, email: string, password: string, role: 'user' | 'salon_owner') => Promise<void>;
+  logout: () => Promise<void>;
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [lastSignupAttempt, setLastSignupAttempt] = useState<number>(0);
   const { toast } = useToast();
 
   useEffect(() => {
-    const initSession = async () => {
-      console.log("Initializing session...");
-      const { data: { session } } = await supabase.auth.getSession();
+    // Check active session
+    const checkSession = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error("Error checking session:", error);
+        return;
+      }
+      
       if (session?.user) {
-        console.log("Session found:", session.user);
-        setUser({
-          id: session.user.id,
-          name: session.user.user_metadata.name || '',
-          email: session.user.email || '',
-          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${session.user.email}`,
-          role: session.user.user_metadata.role || 'user'
-        });
+        try {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+
+          if (profileError) throw profileError;
+
+          setUser({
+            id: session.user.id,
+            name: profile.full_name || '',
+            email: session.user.email || '',
+            role: profile.role || 'user',
+            avatar: profile.avatar_url
+          });
+        } catch (err) {
+          console.error("Error fetching user profile:", err);
+        }
       }
     };
 
-    initSession();
+    checkSession();
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      console.log("Auth state changed:", _event, session?.user);
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event);
+      
       if (session?.user) {
-        setUser({
-          id: session.user.id,
-          name: session.user.user_metadata.name || '',
-          email: session.user.email || '',
-          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${session.user.email}`,
-          role: session.user.user_metadata.role || 'user'
-        });
+        try {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+
+          if (profileError) throw profileError;
+
+          setUser({
+            id: session.user.id,
+            name: profile.full_name || '',
+            email: session.user.email || '',
+            role: profile.role || 'user',
+            avatar: profile.avatar_url
+          });
+        } catch (err) {
+          console.error("Error fetching user profile:", err);
+        }
       } else {
         setUser(null);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string, role: 'user' | 'salon_owner') => {
     try {
       console.log("Attempting login for:", email, "with role:", role);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) {
-        console.error("Login error:", error);
-        throw error;
-      }
+      if (error) throw error;
 
       if (data.user) {
-        console.log("Login successful:", data.user);
-        const userData = {
-          id: data.user.id,
-          name: data.user.user_metadata.name || '',
-          email: data.user.email || '',
-          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
-          role: role
-        };
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
 
-        // Update user metadata with role if it's different
-        if (data.user.user_metadata.role !== role) {
-          const { error: updateError } = await supabase.auth.updateUser({
-            data: { role: role }
-          });
+        if (profileError) throw profileError;
 
-          if (updateError) {
-            console.error("Error updating user role:", updateError);
-          }
+        // Verify role matches
+        if (profile.role !== role) {
+          await logout();
+          throw new Error(`Invalid role. Please login as a ${role}.`);
         }
 
-        setUser(userData);
+        setUser({
+          id: data.user.id,
+          name: profile.full_name || '',
+          email: data.user.email || '',
+          role: profile.role,
+          avatar: profile.avatar_url
+        });
+
         toast({
-          title: "Login successful",
-          description: `Welcome back, ${role === 'salon_owner' ? 'Salon Owner' : 'User'}!`,
+          title: "Login Successful",
+          description: "Welcome back!",
         });
       }
     } catch (error: any) {
       console.error("Login error:", error);
       toast({
-        title: "Login failed",
-        description: error.message || "An unexpected error occurred",
+        title: "Login Failed",
+        description: error.message,
         variant: "destructive",
       });
       throw error;
@@ -103,68 +144,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signup = async (name: string, email: string, password: string, role: 'user' | 'salon_owner') => {
     try {
       console.log("Attempting signup for:", email, "with role:", role);
-      const now = Date.now();
-      const timeSinceLastAttempt = now - lastSignupAttempt;
-      if (timeSinceLastAttempt < 40000) {
-        const remainingTime = Math.ceil((40000 - timeSinceLastAttempt) / 1000);
-        toast({
-          title: "Please wait",
-          description: `You can try again in ${remainingTime} seconds`,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      setLastSignupAttempt(now);
-
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
-            name: name,
-            role: role,
+            name,
+            role,
           },
         },
       });
 
-      if (error) {
-        console.error("Signup error:", error);
-        throw error;
-      }
+      if (error) throw error;
 
       if (data.user) {
-        console.log("Signup successful:", data.user);
-        const userData = {
-          id: data.user.id,
-          name: name,
-          email: email,
-          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
-          role: role
-        };
-
-        try {
-          await createOrUpdateProfile(data.user.id, name, email);
-          setUser(userData);
-          
-          toast({
-            title: "Sign up successful",
-            description: `Welcome to BeautyCut, ${role === 'salon_owner' ? 'Salon Owner' : 'User'}!`,
-          });
-        } catch (profileError: any) {
-          console.error("Error creating profile:", profileError);
-          toast({
-            title: "Profile creation failed",
-            description: profileError.message || "Failed to create profile. Please try logging in.",
-            variant: "destructive",
-          });
-        }
+        // Profile will be created by the database trigger
+        toast({
+          title: "Sign Up Successful",
+          description: "Please check your email to verify your account.",
+        });
       }
     } catch (error: any) {
       console.error("Signup error:", error);
       toast({
-        title: "Sign up failed",
-        description: error.message || "An unexpected error occurred",
+        title: "Sign Up Failed",
+        description: error.message,
         variant: "destructive",
       });
       throw error;
@@ -172,13 +177,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
-    console.log("Logging out...");
-    await supabase.auth.signOut();
-    setUser(null);
-    toast({
-      title: "Logged out",
-      description: "Come back soon!",
-    });
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      setUser(null);
+      toast({
+        title: "Logged Out",
+        description: "You have been successfully logged out.",
+      });
+    } catch (error: any) {
+      console.error("Logout error:", error);
+      toast({
+        title: "Logout Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -191,7 +206,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
