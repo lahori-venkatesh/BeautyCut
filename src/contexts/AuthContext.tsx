@@ -71,11 +71,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error: any) {
       console.error("Login error:", error);
-      toast({
-        title: "Login Failed",
-        description: error.message,
-        variant: "destructive",
-      });
+      if (error.message.includes("Email not confirmed")) {
+        toast({
+          title: "Email Not Confirmed",
+          description: "Please check your email inbox and confirm your email address before logging in.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Login Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
       throw error;
     }
   };
@@ -88,8 +96,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (data.user) {
         toast({
           title: "Sign Up Successful",
-          description: "Please check your email to verify your account.",
+          description: "Please check your email inbox (including spam folder) for a confirmation link. You must confirm your email before logging in.",
+          duration: 6000,
         });
+
+        // Show a second toast with additional instructions
+        setTimeout(() => {
+          toast({
+            title: "Next Steps",
+            description: "1. Open your email\n2. Click the confirmation link\n3. Return here to log in",
+            duration: 8000,
+          });
+        }, 1000);
       }
     } catch (error: any) {
       console.error("Signup error:", error);
