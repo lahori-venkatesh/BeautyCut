@@ -52,8 +52,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string, role: 'user' | 'salon_owner') => {
     try {
+      console.log("Attempting login for:", email);
       const { data, error } = await signInWithPassword(email, password);
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes("Invalid login credentials")) {
+          throw new Error("Invalid email or password. Please try again.");
+        }
+        throw error;
+      }
 
       if (data.user) {
         const profile = await fetchUserProfile(data.user.id);
@@ -77,6 +83,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           description: "Please check your email inbox and confirm your email address before logging in.",
           variant: "destructive",
         });
+      } else if (error.message.includes("User already registered")) {
+        toast({
+          title: "Account Exists",
+          description: "This email is already registered. Please login instead.",
+          variant: "destructive",
+        });
       } else {
         toast({
           title: "Login Failed",
@@ -90,6 +102,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signup = async (name: string, email: string, password: string, role: 'user' | 'salon_owner') => {
     try {
+      console.log("Attempting signup for:", email, "with role:", role);
+      
+      // First check if user exists
+      const { data: existingUser } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', email)
+        .single();
+
+      if (existingUser) {
+        toast({
+          title: "Account Exists",
+          description: "This email is already registered. Please login instead.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { data, error } = await signUp(email, password, { name, role });
       if (error) throw error;
 
@@ -111,11 +141,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error: any) {
       console.error("Signup error:", error);
-      toast({
-        title: "Sign Up Failed",
-        description: error.message,
-        variant: "destructive",
-      });
+      if (error.message.includes("User already registered")) {
+        toast({
+          title: "Account Exists",
+          description: "This email is already registered. Please login instead.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Sign Up Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
       throw error;
     }
   };
