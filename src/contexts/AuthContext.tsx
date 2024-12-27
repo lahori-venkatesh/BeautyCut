@@ -1,21 +1,8 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: 'user' | 'salon_owner';
-  avatar?: string;
-}
-
-interface AuthContextType {
-  user: User | null;
-  login: (email: string, password: string, role: 'user' | 'salon_owner') => Promise<void>;
-  signup: (name: string, email: string, password: string, role: 'user' | 'salon_owner') => Promise<void>;
-  logout: () => Promise<void>;
-}
+import { User, AuthContextType } from "@/types/auth";
+import { fetchUserProfile, signInWithPassword, signUp, signOut, mapProfileToUser } from "@/services/authService";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -24,7 +11,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check active session
     const checkSession = async () => {
       const { data: { session }, error } = await supabase.auth.getSession();
       if (error) {
@@ -34,21 +20,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (session?.user) {
         try {
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-
-          if (profileError) throw profileError;
-
-          setUser({
-            id: session.user.id,
-            name: profile.full_name || '',
-            email: session.user.email || '',
-            role: profile.role || 'user',
-            avatar: profile.avatar_url
-          });
+          const profile = await fetchUserProfile(session.user.id);
+          setUser(mapProfileToUser(profile, session.user.email || ''));
         } catch (err) {
           console.error("Error fetching user profile:", err);
         }
@@ -57,27 +30,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     checkSession();
 
-    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event);
       
       if (session?.user) {
         try {
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-
-          if (profileError) throw profileError;
-
-          setUser({
-            id: session.user.id,
-            name: profile.full_name || '',
-            email: session.user.email || '',
-            role: profile.role || 'user',
-            avatar: profile.avatar_url
-          });
+          const profile = await fetchUserProfile(session.user.id);
+          setUser(mapProfileToUser(profile, session.user.email || ''));
         } catch (err) {
           console.error("Error fetching user profile:", err);
         }
@@ -93,38 +52,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string, role: 'user' | 'salon_owner') => {
     try {
-      console.log("Attempting login for:", email, "with role:", role);
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
+      const { data, error } = await signInWithPassword(email, password);
       if (error) throw error;
 
       if (data.user) {
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
+        const profile = await fetchUserProfile(data.user.id);
 
-        if (profileError) throw profileError;
-
-        // Verify role matches
         if (profile.role !== role) {
-          await logout();
+          await signOut();
           throw new Error(`Invalid role. Please login as a ${role}.`);
         }
 
-        setUser({
-          id: data.user.id,
-          name: profile.full_name || '',
-          email: data.user.email || '',
-          role: profile.role,
-          avatar: profile.avatar_url
-        });
-
+        setUser(mapProfileToUser(profile, data.user.email || ''));
         toast({
           title: "Login Successful",
           description: "Welcome back!",
@@ -143,23 +82,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signup = async (name: string, email: string, password: string, role: 'user' | 'salon_owner') => {
     try {
-      console.log("Attempting signup for:", email, "with role:", role);
-      
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name,
-            role,
-          },
-        },
-      });
-
+      const { data, error } = await signUp(email, password, { name, role });
       if (error) throw error;
 
       if (data.user) {
-        // Profile will be created by the database trigger
         toast({
           title: "Sign Up Successful",
           description: "Please check your email to verify your account.",
@@ -178,7 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
+      const { error } = await signOut();
       if (error) throw error;
       
       setUser(null);
