@@ -5,13 +5,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Scissors, User } from "lucide-react";
 
 interface AuthDialogProps {
   isOpen: boolean;
   onClose: () => void;
+  defaultRole?: 'user' | 'salon_owner';
 }
 
-export const AuthDialog = ({ isOpen, onClose }: AuthDialogProps) => {
+export const AuthDialog = ({ isOpen, onClose, defaultRole = 'user' }: AuthDialogProps) => {
   const [isLogin, setIsLogin] = useState(true);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -20,33 +22,49 @@ export const AuthDialog = ({ isOpen, onClose }: AuthDialogProps) => {
 
   const handleSubmit = async (e: React.FormEvent, role: 'user' | 'salon_owner') => {
     e.preventDefault();
-    if (isLogin) {
-      await login(email, password, role);
-    } else {
-      await signup(name, email, password, role);
+    try {
+      if (isLogin) {
+        await login(email, password, role);
+      } else {
+        await signup(name, email, password, role);
+      }
+      onClose();
+    } catch (error: any) {
+      console.error("Auth error:", error);
     }
-    onClose();
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{isLogin ? "Login" : "Sign Up"}</DialogTitle>
+          <DialogTitle className="text-2xl font-bold text-center">
+            {isLogin ? "Welcome Back!" : "Create an Account"}
+          </DialogTitle>
         </DialogHeader>
-        <Tabs defaultValue="user">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="user">Customer</TabsTrigger>
-            <TabsTrigger value="salon_owner">Salon Owner</TabsTrigger>
+        <Tabs defaultValue={defaultRole} className="mt-4">
+          <TabsList className="grid w-full grid-cols-2 mb-8">
+            <TabsTrigger value="user" className="flex items-center gap-2">
+              <User className="w-4 h-4" />
+              Customer
+            </TabsTrigger>
+            <TabsTrigger value="salon_owner" className="flex items-center gap-2">
+              <Scissors className="w-4 h-4" />
+              Salon Owner
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="user">
+            <div className="text-center mb-6 text-muted-foreground">
+              {isLogin ? "Login to book salon services" : "Sign up to start booking salon services"}
+            </div>
             <form onSubmit={(e) => handleSubmit(e, 'user')} className="space-y-4">
               {!isLogin && (
                 <div className="space-y-2">
-                  <Label htmlFor="name-user">Name</Label>
+                  <Label htmlFor="name-user">Full Name</Label>
                   <Input
                     id="name-user"
+                    placeholder="Enter your full name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required
@@ -58,6 +76,7 @@ export const AuthDialog = ({ isOpen, onClose }: AuthDialogProps) => {
                 <Input
                   id="email-user"
                   type="email"
+                  placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -68,6 +87,7 @@ export const AuthDialog = ({ isOpen, onClose }: AuthDialogProps) => {
                 <Input
                   id="password-user"
                   type="password"
+                  placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -80,12 +100,16 @@ export const AuthDialog = ({ isOpen, onClose }: AuthDialogProps) => {
           </TabsContent>
           
           <TabsContent value="salon_owner">
+            <div className="text-center mb-6 text-muted-foreground">
+              {isLogin ? "Login to manage your salon" : "Sign up to list your salon"}
+            </div>
             <form onSubmit={(e) => handleSubmit(e, 'salon_owner')} className="space-y-4">
               {!isLogin && (
                 <div className="space-y-2">
-                  <Label htmlFor="name-owner">Name</Label>
+                  <Label htmlFor="name-owner">Salon Name</Label>
                   <Input
                     id="name-owner"
+                    placeholder="Enter your salon name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required
@@ -93,10 +117,11 @@ export const AuthDialog = ({ isOpen, onClose }: AuthDialogProps) => {
                 </div>
               )}
               <div className="space-y-2">
-                <Label htmlFor="email-owner">Email</Label>
+                <Label htmlFor="email-owner">Business Email</Label>
                 <Input
                   id="email-owner"
                   type="email"
+                  placeholder="Enter your business email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -107,6 +132,7 @@ export const AuthDialog = ({ isOpen, onClose }: AuthDialogProps) => {
                 <Input
                   id="password-owner"
                   type="password"
+                  placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -119,14 +145,14 @@ export const AuthDialog = ({ isOpen, onClose }: AuthDialogProps) => {
           </TabsContent>
         </Tabs>
         
-        <div className="text-center mt-4">
+        <div className="text-center mt-6">
           <Button
             variant="link"
             onClick={() => setIsLogin(!isLogin)}
             className="text-sm"
           >
             {isLogin
-              ? "Don't have an account? Sign up"
+              ? "New to BeautyCut? Create an account"
               : "Already have an account? Login"}
           </Button>
         </div>

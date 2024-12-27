@@ -9,11 +9,22 @@ import { useAuth } from "@/contexts/AuthContext";
 export const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [authRole, setAuthRole] = useState<'user' | 'salon_owner'>('user');
   const navigate = useNavigate();
   const { user } = useAuth();
 
   const handleListSalon = () => {
-    navigate('/list-salon');
+    if (!user) {
+      setAuthRole('salon_owner');
+      setIsAuthOpen(true);
+    } else {
+      navigate('/list-salon');
+    }
+  };
+
+  const handleSignUp = (role: 'user' | 'salon_owner' = 'user') => {
+    setAuthRole(role);
+    setIsAuthOpen(true);
   };
 
   return (
@@ -55,7 +66,7 @@ export const Navbar = () => {
             {user ? (
               <UserMenu />
             ) : (
-              <Button onClick={() => setIsAuthOpen(true)}>Sign Up</Button>
+              <Button onClick={() => handleSignUp('user')}>Sign Up</Button>
             )}
           </div>
         </div>
@@ -79,14 +90,14 @@ export const Navbar = () => {
                 My Profile
               </Button>
             ) : (
-              <Button onClick={() => setIsAuthOpen(true)} className="w-full justify-start">
+              <Button onClick={() => handleSignUp('user')} className="w-full justify-start">
                 Sign Up
               </Button>
             )}
           </div>
         )}
       </div>
-      <AuthDialog isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
+      <AuthDialog isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} defaultRole={authRole} />
     </nav>
   );
 };
