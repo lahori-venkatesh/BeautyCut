@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Scissors, User } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface AuthDialogProps {
   isOpen: boolean;
@@ -18,20 +19,43 @@ export const AuthDialog = ({ isOpen, onClose, defaultRole = 'user' }: AuthDialog
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState<'user' | 'salon_owner'>(defaultRole);
   const { login, signup } = useAuth();
+  const { toast } = useToast();
 
-  const handleSubmit = async (e: React.FormEvent, role: 'user' | 'salon_owner') => {
+  const handleSubmit = async (e: React.FormEvent, selectedRole: 'user' | 'salon_owner') => {
     e.preventDefault();
     try {
       if (isLogin) {
-        await login(email, password, role);
+        await login(email, password, selectedRole);
+        toast({
+          title: `Welcome back!`,
+          description: selectedRole === 'user' ? 'You can now book salon services.' : 'You can now manage your salon.',
+        });
       } else {
-        await signup(name, email, password, role);
+        await signup(name, email, password, selectedRole);
+        toast({
+          title: "Account created successfully!",
+          description: "Please check your email to verify your account.",
+        });
       }
       onClose();
+      // Reset form
+      setName("");
+      setEmail("");
+      setPassword("");
     } catch (error: any) {
       console.error("Auth error:", error);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     }
+  };
+
+  const handleRoleChange = (newRole: string) => {
+    setRole(newRole as 'user' | 'salon_owner');
   };
 
   return (
@@ -41,8 +65,12 @@ export const AuthDialog = ({ isOpen, onClose, defaultRole = 'user' }: AuthDialog
           <DialogTitle className="text-2xl font-bold text-center">
             {isLogin ? "Welcome Back!" : "Create an Account"}
           </DialogTitle>
+          <DialogDescription className="text-center text-muted-foreground">
+            {isLogin ? "Sign in to continue" : "Sign up to get started"}
+          </DialogDescription>
         </DialogHeader>
-        <Tabs defaultValue={defaultRole} className="mt-4">
+        
+        <Tabs defaultValue={role} className="mt-4" onValueChange={handleRoleChange}>
           <TabsList className="grid w-full grid-cols-2 mb-8">
             <TabsTrigger value="user" className="flex items-center gap-2">
               <User className="w-4 h-4" />
@@ -91,6 +119,7 @@ export const AuthDialog = ({ isOpen, onClose, defaultRole = 'user' }: AuthDialog
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  minLength={6}
                 />
               </div>
               <Button type="submit" className="w-full">
@@ -136,6 +165,7 @@ export const AuthDialog = ({ isOpen, onClose, defaultRole = 'user' }: AuthDialog
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  minLength={6}
                 />
               </div>
               <Button type="submit" className="w-full">
@@ -148,7 +178,12 @@ export const AuthDialog = ({ isOpen, onClose, defaultRole = 'user' }: AuthDialog
         <div className="text-center mt-6">
           <Button
             variant="link"
-            onClick={() => setIsLogin(!isLogin)}
+            onClick={() => {
+              setIsLogin(!isLogin);
+              setName("");
+              setEmail("");
+              setPassword("");
+            }}
             className="text-sm"
           >
             {isLogin
