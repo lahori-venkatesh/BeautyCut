@@ -29,8 +29,11 @@ export const signUp = async (email: string, password: string, userData: { name: 
     email,
     password,
     options: {
-      data: userData,
-    },
+      data: {
+        name: userData.name,
+        role: userData.role
+      }
+    }
   });
 };
 

@@ -27,6 +27,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.log("Session found, fetching profile...");
           try {
             const profile = await fetchUserProfile(session.user.id);
+            if (!profile) {
+              console.error("No profile found for user");
+              await handleSignOut();
+              return;
+            }
             setUser(mapProfileToUser(profile, session.user.email || ''));
           } catch (err) {
             console.error("Error fetching user profile:", err);
@@ -60,6 +65,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session?.user) {
         try {
           const profile = await fetchUserProfile(session.user.id);
+          if (!profile) {
+            console.error("No profile found for user");
+            await handleSignOut();
+            return;
+          }
           setUser(mapProfileToUser(profile, session.user.email || ''));
         } catch (err) {
           console.error("Error fetching user profile:", err);
@@ -79,9 +89,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut();
+      await signOut();
       setUser(null);
-      // Clear any stored tokens
       localStorage.removeItem('supabase.auth.token');
     } catch (error) {
       console.error("Error during sign out:", error);
@@ -90,10 +99,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string, role: 'user' | 'salon_owner') => {
     try {
-      console.log("Attempting login for:", email);
+      console.log("Attempting login for:", email, "with role:", role);
       const { data, error } = await signInWithPassword(email, password);
       
       if (error) {
+        console.error("Login error:", error);
         if (error.message.includes("Invalid login credentials")) {
           throw new Error("Invalid email or password. Please try again.");
         }
@@ -102,7 +112,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (data.user) {
         const profile = await fetchUserProfile(data.user.id);
+        console.log("Retrieved profile:", profile);
         
+        if (!profile) {
+          throw new Error("Profile not found. Please try signing up first.");
+        }
+
         if (profile.role !== role) {
           await handleSignOut();
           throw new Error(`This account is not registered as a ${role.replace('_', ' ')}. Please login with the correct account type.`);
@@ -129,13 +144,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log("Attempting signup for:", email, "with role:", role);
       
-      const { data: existingUser } = await supabase
+      // Check if user already exists
+      const { data: existingProfile } = await supabase
         .from('profiles')
         .select('id')
         .eq('email', email)
         .single();
 
-      if (existingUser) {
+      if (existingProfile) {
         toast({
           title: "Account Exists",
           description: "This email is already registered. Please login instead.",
@@ -144,10 +160,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      // Sign up the user
       const { data, error } = await signUp(email, password, { name, role });
       if (error) throw error;
 
       if (data.user) {
+        // Create profile with role
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([
+            {
+              id: data.user.id,
+              full_name: name,
+              email: email,
+              role: role
+            }
+          ]);
+
+        if (profileError) throw profileError;
+
         toast({
           title: "Sign Up Successful",
           description: "Please check your email inbox (including spam folder) for a confirmation link. You must confirm your email before logging in.",
@@ -191,7 +222,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   if (loading) {
-    return null; // Or a loading spinner
+    return null;
   }
 
   return (
