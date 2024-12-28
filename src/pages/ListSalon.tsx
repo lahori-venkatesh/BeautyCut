@@ -87,57 +87,63 @@ export default function ListSalon() {
     },
   });
 
-const onSubmit = async (values: z.infer<typeof formSchema>) => {
-  console.log("Form submitted with values:", values);
-  
-  try {
-    // Format the location string
-    const location = `${values.address}, ${values.city}, ${values.state} ${values.zipCode}`;
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    console.log("Form submitted with values:", values);
     
-    // Format services array to match what's shown to customers
-    const serviceNames = values.services.map(service => service.name);
-    
-    // Insert salon data into Supabase
-    const { data: salon, error } = await supabase
-      .from('salons')
-      .insert([
-        {
-          name: values.salonName,
-          description: values.description,
-          location: location,
-          image_url: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80", // Default image
-          rating: 5.0, // Default rating for new salons
-          services: serviceNames,
-          operating_hours: values.operatingHours,
-          phone: values.phone,
-          email: values.email,
-          parking_info: values.parkingInfo,
-          accessibility_features: values.accessibilityFeatures,
-          payment_methods: values.paymentMethods,
-          cancellation_policy: values.cancellationPolicy
-        }
-      ])
-      .select()
-      .single();
+    try {
+      // Format the location string
+      const location = `${values.address}, ${values.city}, ${values.state} ${values.zipCode}`;
+      
+      // Format services array to match what's shown to customers
+      const formattedServices = values.services.map(service => ({
+        name: service.name,
+        description: service.description,
+        price: service.price,
+        duration: service.duration,
+        experts: service.experts
+      }));
+      
+      // Insert salon data into Supabase
+      const { data: salon, error } = await supabase
+        .from('salons')
+        .insert([
+          {
+            name: values.salonName,
+            description: values.description,
+            location: location,
+            image_url: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80", // Default image
+            rating: 5.0, // Default rating for new salons
+            services: formattedServices,
+            operating_hours: values.operatingHours,
+            phone: values.phone,
+            email: values.email,
+            parking_info: values.parkingInfo,
+            accessibility_features: values.accessibilityFeatures,
+            payment_methods: values.paymentMethods,
+            cancellation_policy: values.cancellationPolicy
+          }
+        ])
+        .select()
+        .single();
 
-    if (error) throw error;
-    
-    toast({
-      title: "Salon Registration Successful",
-      description: "Your salon has been listed successfully.",
-    });
-    
-    // Navigate to the salon admin dashboard
-    navigate("/salon-admin");
-  } catch (error) {
-    console.error('Error submitting salon:', error);
-    toast({
-      title: "Error",
-      description: "Failed to submit salon listing. Please try again.",
-      variant: "destructive",
-    });
-  }
-};
+      if (error) throw error;
+      
+      toast({
+        title: "Salon Registration Successful",
+        description: "Your salon has been listed successfully.",
+      });
+      
+      // Navigate to the salon admin dashboard
+      navigate("/salon-admin");
+    } catch (error) {
+      console.error('Error submitting salon:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit salon listing. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   if (!user || user.role !== 'salon_owner') {
     return (

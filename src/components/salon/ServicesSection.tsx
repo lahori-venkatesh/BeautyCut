@@ -12,7 +12,13 @@ export function ServicesSection({ form }: { form: any }) {
     const currentServices = form.getValues("services") || [];
     form.setValue("services", [
       ...currentServices,
-      { name: "", description: "", price: "", duration: "", experts: [] }
+      { 
+        name: "", 
+        description: "", 
+        price: "", 
+        duration: "", 
+        experts: []
+      }
     ]);
   };
 
@@ -51,7 +57,7 @@ export function ServicesSection({ form }: { form: any }) {
               <FormItem>
                 <FormLabel>Service Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., Haircut" {...field} />
+                  <Input placeholder="e.g., Basic Hair Cut" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -65,7 +71,7 @@ export function ServicesSection({ form }: { form: any }) {
               <FormItem>
                 <FormLabel>Description</FormLabel>
                 <FormControl>
-                  <Textarea placeholder="Describe the service..." {...field} />
+                  <Textarea placeholder="e.g., Professional haircut with expert styling" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -80,7 +86,7 @@ export function ServicesSection({ form }: { form: any }) {
                 <FormItem>
                   <FormLabel>Price</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., ₹500" {...field} />
+                    <Input placeholder="e.g., ₹300" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -94,13 +100,35 @@ export function ServicesSection({ form }: { form: any }) {
                 <FormItem>
                   <FormLabel>Duration</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., 45 mins" {...field} />
+                    <Input placeholder="e.g., 30 mins" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
           </div>
+
+          <FormField
+            control={form.control}
+            name={`services.${index}.experts`}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Experts (comma-separated)</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="e.g., John, Mike, Sarah" 
+                    {...field}
+                    value={field.value?.join(', ') || ''}
+                    onChange={(e) => {
+                      const experts = e.target.value.split(',').map(expert => expert.trim()).filter(Boolean);
+                      field.onChange(experts);
+                    }}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
       ))}
     </div>
