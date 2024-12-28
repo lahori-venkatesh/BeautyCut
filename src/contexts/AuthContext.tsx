@@ -52,10 +52,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event);
       
-      if (event === 'TOKEN_REFRESHED') {
-        console.log("Token refreshed successfully");
-      }
-      
       if (event === 'SIGNED_OUT') {
         console.log("User signed out");
         setUser(null);
@@ -144,23 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log("Attempting signup for:", email, "with role:", role);
       
-      // Check if user already exists
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', email)
-        .single();
-
-      if (existingProfile) {
-        toast({
-          title: "Account Exists",
-          description: "This email is already registered. Please login instead.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Sign up the user
+      // Sign up the user first
       const { data, error } = await signUp(email, password, { name, role });
       if (error) throw error;
 
@@ -168,14 +148,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Create profile with role
         const { error: profileError } = await supabase
           .from('profiles')
-          .insert([
+          .upsert([
             {
               id: data.user.id,
               full_name: name,
               email: email,
               role: role
             }
-          ]);
+          ], { onConflict: 'id' });
 
         if (profileError) throw profileError;
 
