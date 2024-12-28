@@ -94,9 +94,9 @@ export default function ListSalon() {
       // Format the location string
       const location = `${values.address}, ${values.city}, ${values.state} ${values.zipCode}`;
       
-      // Format services array to match what's shown to customers
+      // Format services array to match Supabase schema
       const formattedServices = values.services.map(service => ({
-        name: service.name,
+        title: service.name,
         description: service.description,
         price: service.price,
         duration: service.duration,
@@ -106,27 +106,23 @@ export default function ListSalon() {
       // Insert salon data into Supabase
       const { data: salon, error } = await supabase
         .from('salons')
-        .insert([
-          {
-            name: values.salonName,
-            description: values.description,
-            location: location,
-            image_url: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80", // Default image
-            rating: 5.0, // Default rating for new salons
-            services: formattedServices,
-            operating_hours: values.operatingHours,
-            phone: values.phone,
-            email: values.email,
-            parking_info: values.parkingInfo,
-            accessibility_features: values.accessibilityFeatures,
-            payment_methods: values.paymentMethods,
-            cancellation_policy: values.cancellationPolicy
-          }
-        ])
+        .insert({
+          name: values.salonName,
+          description: values.description,
+          location: location,
+          image_url: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80", // Default image
+          rating: 5.0, // Default rating for new salons
+          services: formattedServices,
+        })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating salon:', error);
+        throw error;
+      }
+
+      console.log('Salon created successfully:', salon);
       
       toast({
         title: "Salon Registration Successful",
