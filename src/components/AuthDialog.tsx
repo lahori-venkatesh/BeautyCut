@@ -12,9 +12,10 @@ interface AuthDialogProps {
   isOpen: boolean;
   onClose: () => void;
   defaultRole?: 'user' | 'salon_owner';
+  onSuccess?: (role: 'user' | 'salon_owner') => void;
 }
 
-export const AuthDialog = ({ isOpen, onClose, defaultRole = 'user' }: AuthDialogProps) => {
+export const AuthDialog = ({ isOpen, onClose, defaultRole = 'user', onSuccess }: AuthDialogProps) => {
   const [isLogin, setIsLogin] = useState(true);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -32,12 +33,17 @@ export const AuthDialog = ({ isOpen, onClose, defaultRole = 'user' }: AuthDialog
           title: `Welcome back!`,
           description: selectedRole === 'user' ? 'You can now book salon services.' : 'You can now manage your salon.',
         });
+        onSuccess?.(selectedRole);
       } else {
         await signup(name, email, password, selectedRole);
         toast({
           title: "Account created successfully!",
-          description: "Please check your email to verify your account.",
+          description: "Please sign in to continue.",
         });
+        // After successful signup, switch to login form
+        setIsLogin(true);
+        setPassword("");
+        return; // Don't close dialog yet
       }
       onClose();
       // Reset form

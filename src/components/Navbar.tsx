@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Scissors, Menu, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AuthDialog } from "./AuthDialog";
 import { UserMenu } from "./UserMenu";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,12 +13,23 @@ export const Navbar = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  useEffect(() => {
+    // If user is a salon owner, redirect to admin dashboard
+    if (user && user.role === 'salon_owner') {
+      navigate('/salon-admin');
+    }
+  }, [user, navigate]);
+
   const handleListSalon = () => {
     if (!user) {
       setAuthRole('salon_owner');
       setIsAuthOpen(true);
+    } else if (user.role === 'salon_owner') {
+      navigate('/salon-admin');
     } else {
-      navigate('/list-salon');
+      // If regular user tries to list salon, prompt them to register as salon owner
+      setAuthRole('salon_owner');
+      setIsAuthOpen(true);
     }
   };
 
@@ -26,6 +37,23 @@ export const Navbar = () => {
     setAuthRole(role);
     setIsAuthOpen(true);
   };
+
+  // Don't show regular navigation items for salon owners
+  if (user?.role === 'salon_owner') {
+    return (
+      <nav className="border-b bg-white sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <Link to="/salon-admin" className="flex items-center space-x-2">
+              <Scissors className="h-6 w-6 text-primary" />
+              <span className="text-xl font-bold text-primary">BeautyCut</span>
+            </Link>
+            <UserMenu />
+          </div>
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <nav className="border-b bg-white sticky top-0 z-50">
@@ -97,7 +125,16 @@ export const Navbar = () => {
           </div>
         )}
       </div>
-      <AuthDialog isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} defaultRole={authRole} />
+      <AuthDialog 
+        isOpen={isAuthOpen} 
+        onClose={() => setIsAuthOpen(false)} 
+        defaultRole={authRole}
+        onSuccess={(role) => {
+          if (role === 'salon_owner') {
+            navigate('/list-salon');
+          }
+        }} 
+      />
     </nav>
   );
 };
