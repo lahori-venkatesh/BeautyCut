@@ -8,13 +8,52 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (error) {
-        console.error("Error checking session:", error);
+      try {
+        console.log("Checking session...");
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Session check error:", error);
+          await handleSignOut();
+          return;
+        }
+        
+        if (session?.user) {
+          console.log("Session found, fetching profile...");
+          try {
+            const profile = await fetchUserProfile(session.user.id);
+            setUser(mapProfileToUser(profile, session.user.email || ''));
+          } catch (err) {
+            console.error("Error fetching user profile:", err);
+            await handleSignOut();
+          }
+        } else {
+          console.log("No session found");
+          setUser(null);
+        }
+      } catch (err) {
+        console.error("Session check failed:", err);
+        await handleSignOut();
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event);
+      
+      if (event === 'TOKEN_REFRESHED') {
+        console.log("Token refreshed successfully");
+      }
+      
+      if (event === 'SIGNED_OUT') {
+        console.log("User signed out");
+        setUser(null);
         return;
       }
       
@@ -24,36 +63,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(mapProfileToUser(profile, session.user.email || ''));
         } catch (err) {
           console.error("Error fetching user profile:", err);
-        }
-      }
-    };
-
-    checkSession();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event);
-      
-      if (session?.user) {
-        try {
-          const profile = await fetchUserProfile(session.user.id);
-          setUser(mapProfileToUser(profile, session.user.email || ''));
-        } catch (err) {
-          console.error("Error fetching user profile:", err);
+          await handleSignOut();
         }
       } else {
         setUser(null);
       }
     });
 
+    checkSession();
+
     return () => {
       subscription.unsubscribe();
     };
   }, []);
 
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      // Clear any stored tokens
+      localStorage.removeItem('supabase.auth.token');
+    } catch (error) {
+      console.error("Error during sign out:", error);
+    }
+  };
+
   const login = async (email: string, password: string, role: 'user' | 'salon_owner') => {
     try {
       console.log("Attempting login for:", email);
       const { data, error } = await signInWithPassword(email, password);
+      
       if (error) {
         if (error.message.includes("Invalid login credentials")) {
           throw new Error("Invalid email or password. Please try again.");
@@ -64,9 +103,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (data.user) {
         const profile = await fetchUserProfile(data.user.id);
         
-        // Check if the user's role matches the requested role
         if (profile.role !== role) {
-          await signOut();
+          await handleSignOut();
           throw new Error(`This account is not registered as a ${role.replace('_', ' ')}. Please login with the correct account type.`);
         }
 
@@ -78,25 +116,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error: any) {
       console.error("Login error:", error);
-      if (error.message.includes("Email not confirmed")) {
-        toast({
-          title: "Email Not Confirmed",
-          description: "Please check your email inbox and confirm your email address before logging in.",
-          variant: "destructive",
-        });
-      } else if (error.message.includes("User already registered")) {
-        toast({
-          title: "Account Exists",
-          description: "This email is already registered. Please login instead.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Login Failed",
-          description: error.message,
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Login Failed",
+        description: error.message,
+        variant: "destructive",
+      });
       throw error;
     }
   };
@@ -105,7 +129,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log("Attempting signup for:", email, "with role:", role);
       
-      // First check if user exists
       const { data: existingUser } = await supabase
         .from('profiles')
         .select('id')
@@ -131,7 +154,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           duration: 6000,
         });
 
-        // Show a second toast with additional instructions
         setTimeout(() => {
           toast({
             title: "Next Steps",
@@ -142,29 +164,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error: any) {
       console.error("Signup error:", error);
-      if (error.message.includes("User already registered")) {
-        toast({
-          title: "Account Exists",
-          description: "This email is already registered. Please login instead.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Sign Up Failed",
-          description: error.message,
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Sign Up Failed",
+        description: error.message,
+        variant: "destructive",
+      });
       throw error;
     }
   };
 
   const logout = async () => {
     try {
-      const { error } = await signOut();
-      if (error) throw error;
-      
-      setUser(null);
+      await handleSignOut();
       toast({
         title: "Logged Out",
         description: "You have been successfully logged out.",
@@ -178,6 +189,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
     }
   };
+
+  if (loading) {
+    return null; // Or a loading spinner
+  }
 
   return (
     <AuthContext.Provider value={{ user, login, signup, logout }}>
