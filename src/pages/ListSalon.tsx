@@ -95,16 +95,7 @@ export default function ListSalon() {
       const location = `${values.address}, ${values.city}, ${values.state} ${values.zipCode}`;
       
       // Format services array to match Supabase schema
-      // Store the full service objects as a JSON string in the services array
-      const formattedServices = values.services.map(service => 
-        JSON.stringify({
-          title: service.name,
-          description: service.description,
-          price: service.price,
-          duration: service.duration,
-          experts: service.experts
-        })
-      );
+      const formattedServices = values.services.map(service => service.name);
 
       console.log('Formatted services:', formattedServices);
       
