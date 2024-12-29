@@ -58,6 +58,7 @@ export default function ListSalon() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
+  console.log("Current user:", user);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -94,10 +95,11 @@ export default function ListSalon() {
       // Format the location string
       const location = `${values.address}, ${values.city}, ${values.state} ${values.zipCode}`;
       
-      // Format services array to match Supabase schema
+      // Format services array to match Supabase schema (only service names)
       const formattedServices = values.services.map(service => service.name);
 
       console.log('Formatted services:', formattedServices);
+      console.log('Attempting to insert salon with location:', location);
       
       // Insert salon data into Supabase
       const { data: salon, error } = await supabase
@@ -106,22 +108,26 @@ export default function ListSalon() {
           name: values.salonName,
           description: values.description,
           location: location,
-          image_url: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80", // Default image
-          rating: 5.0, // Default rating for new salons
           services: formattedServices,
+          rating: 5.0, // Default rating for new salons
         })
         .select()
         .single();
 
       if (error) {
         console.error('Error creating salon:', error);
-        throw error;
+        toast({
+          title: "Error",
+          description: "Failed to create salon. Please try again.",
+          variant: "destructive",
+        });
+        return;
       }
 
       console.log('Salon created successfully:', salon);
       
       toast({
-        title: "Salon Registration Successful",
+        title: "Success",
         description: "Your salon has been listed successfully.",
       });
       
