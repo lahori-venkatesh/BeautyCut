@@ -19,16 +19,28 @@ import { AccessibilitySection } from "@/components/salon/AccessibilitySection";
 
 const formSchema = z.object({
   salonName: z.string().min(2, { message: "Salon name must be at least 2 characters." }),
-  description: z.string().min(10, { message: "Description must be at least 10 characters." }),
+  email: z.string().email({ message: "Please enter a valid email address." }),
+  phone: z.string().min(10, { message: "Please enter a valid phone number." }),
   address: z.string().min(5, { message: "Address must be at least 5 characters." }),
   city: z.string().min(2, { message: "City must be at least 2 characters." }),
   state: z.string().min(2, { message: "State must be at least 2 characters." }),
   zipCode: z.string().min(5, { message: "ZIP code must be at least 5 characters." }),
+  operatingHours: z.string().min(5, { message: "Operating hours are required." }),
   services: z.array(z.object({
-    name: z.string(),
-    price: z.number(),
-    duration: z.number()
+    name: z.string().min(1, "Service name is required"),
+    price: z.number().min(0, "Price must be a positive number"),
+    duration: z.number().min(1, "Duration must be at least 1 minute")
   })).min(1, { message: "At least one service is required." }),
+  onlineBooking: z.boolean().optional(),
+  cancellationPolicy: z.string().optional(),
+  waitlistOptions: z.boolean().optional(),
+  currentOffers: z.string().optional(),
+  membershipPlans: z.string().optional(),
+  parkingInfo: z.string().optional(),
+  accessibilityFeatures: z.string().optional(),
+  paymentMethods: z.string().optional(),
+  salonImages: z.any().optional(),
+  parkingImages: z.any().optional(),
 });
 
 export default function ListSalon() {
@@ -54,23 +66,29 @@ export default function ListSalon() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       salonName: "",
-      description: "",
+      email: "",
+      phone: "",
       address: "",
       city: "",
       state: "",
       zipCode: "",
+      operatingHours: "",
       services: [
         {
-          name: "Haircut",
-          price: 30,
+          name: "",
+          price: 0,
           duration: 30
         }
-      ]
+      ],
+      onlineBooking: false,
+      waitlistOptions: false,
     },
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
+      console.log("Form values:", values);
+      
       if (!user) {
         toast({
           title: "Error",
@@ -80,15 +98,16 @@ export default function ListSalon() {
         return;
       }
 
-      console.log("Submitting salon data:", values);
-      
       // Format the location string
       const location = `${values.address}, ${values.city}, ${values.state} ${values.zipCode}`;
       
-      // Format services array to match Supabase schema (only service names)
-      const formattedServices = values.services.map(service => service.name);
+      // Format services array
+      const formattedServices = values.services.map(service => ({
+        name: service.name,
+        price: service.price,
+        duration: service.duration
+      }));
 
-      console.log('Formatted services:', formattedServices);
       console.log('Attempting to insert salon with location:', location);
       
       // Insert salon data into Supabase
@@ -96,7 +115,7 @@ export default function ListSalon() {
         .from('salons')
         .insert({
           name: values.salonName,
-          description: values.description,
+          description: values.cancellationPolicy || '',
           location: location,
           services: formattedServices,
           rating: 5.0, // Default rating for new salons
@@ -159,7 +178,7 @@ export default function ListSalon() {
             <Button 
               type="submit" 
               className="w-full"
-              onClick={() => console.log("Submit button clicked")}
+              onClick={() => console.log("Submit button clicked", form.getValues())}
             >
               Submit Salon Listing
             </Button>
