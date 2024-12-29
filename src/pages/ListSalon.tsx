@@ -2,21 +2,20 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Form } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
+import { ArrowLeft } from "lucide-react";
+import { BasicDetailsSection } from "@/components/salon/BasicDetailsSection";
+import { ServicesSection } from "@/components/salon/ServicesSection";
+import { StaffSection } from "@/components/salon/StaffSection";
+import { GalleryUpload } from "@/components/salon/GalleryUpload";
+import { BookingFeatures } from "@/components/salon/BookingFeatures";
+import { PromotionsSection } from "@/components/salon/PromotionsSection";
+import { AccessibilitySection } from "@/components/salon/AccessibilitySection";
 
 const formSchema = z.object({
   salonName: z.string().min(2, { message: "Salon name must be at least 2 characters." }),
