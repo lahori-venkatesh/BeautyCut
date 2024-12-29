@@ -101,14 +101,17 @@ export default function ListSalon() {
       // Format the location string
       const location = `${values.address}, ${values.city}, ${values.state} ${values.zipCode}`;
       
-      // Format services array
-      const formattedServices = values.services.map(service => ({
-        name: service.name,
-        price: service.price,
-        duration: service.duration
-      }));
+      // Format services array to match the Supabase schema (array of strings)
+      const formattedServices = values.services.map(service => 
+        JSON.stringify({
+          name: service.name,
+          price: service.price,
+          duration: service.duration
+        })
+      );
 
       console.log('Attempting to insert salon with location:', location);
+      console.log('Formatted services:', formattedServices);
       
       // Insert salon data into Supabase
       const { data: salon, error } = await supabase
