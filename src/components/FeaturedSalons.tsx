@@ -54,13 +54,15 @@ export const FeaturedSalons = () => {
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
     gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
     retry: 2,
-    onError: (error) => {
-      console.error("Query error:", error);
-      toast({
-        title: "Error loading salons",
-        description: "Please try again later",
-        variant: "destructive",
-      });
+    meta: {
+      onError: (error: Error) => {
+        console.error("Query error:", error);
+        toast({
+          title: "Error loading salons",
+          description: "Please try again later",
+          variant: "destructive",
+        });
+      },
     },
   });
 
