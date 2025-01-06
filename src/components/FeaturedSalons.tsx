@@ -4,27 +4,34 @@ import { SalonCard } from "@/components/SalonCard";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
+import { Loader } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
-// Fetch featured salons function
+// Fetch featured salons function with better error handling
 const fetchFeaturedSalons = async () => {
   console.log("Fetching featured salons...");
-  const { data, error } = await supabase
-    .from('salons')
-    .select('*')
-    .limit(6);
-  
-  if (error) {
-    console.error("Error fetching salons:", error);
+  try {
+    const { data, error } = await supabase
+      .from('salons')
+      .select('*')
+      .limit(6);
+    
+    if (error) {
+      console.error("Error fetching salons:", error);
+      throw error;
+    }
+    
+    console.log("Successfully fetched salons:", data);
+    return data;
+  } catch (error) {
+    console.error("Failed to fetch salons:", error);
     throw error;
   }
-  
-  console.log("Fetched salons:", data);
-  return data;
 };
 
 // Loading skeleton component for salon cards
 const SalonCardSkeleton = () => (
-  <div className="border rounded-lg overflow-hidden">
+  <div className="border rounded-lg overflow-hidden animate-pulse">
     <Skeleton className="h-48 w-full" />
     <div className="p-4 space-y-3">
       <Skeleton className="h-6 w-3/4" />
@@ -39,15 +46,39 @@ const SalonCardSkeleton = () => (
 
 export const FeaturedSalons = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   
   const { data: salons, isLoading, error } = useQuery({
     queryKey: ['featuredSalons'],
     queryFn: fetchFeaturedSalons,
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
-    gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes (previously cacheTime)
+    gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
+    retry: 2,
+    onError: (error) => {
+      console.error("Query error:", error);
+      toast({
+        title: "Error loading salons",
+        description: "Please try again later",
+        variant: "destructive",
+      });
+    },
   });
 
-  console.log("Rendering FeaturedSalons with salons:", salons);
+  console.log("Rendering FeaturedSalons with state:", { isLoading, error, salonsCount: salons?.length });
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-16 text-center">
+        <h2 className="text-3xl font-bold mb-4">Featured Salons</h2>
+        <div className="text-red-600 mb-8">
+          Failed to load salons. Please try again later.
+        </div>
+        <Button onClick={() => window.location.reload()}>
+          Retry Loading
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-16">
@@ -58,19 +89,15 @@ export const FeaturedSalons = () => {
         </p>
       </div>
 
-      {error && (
-        <div className="text-center text-red-600 mb-8">
-          Failed to load salons. Please try again later.
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {isLoading ? (
-          Array(6).fill(0).map((_, index) => (
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {Array(6).fill(0).map((_, index) => (
             <SalonCardSkeleton key={index} />
-          ))
-        ) : salons && salons.length > 0 ? (
-          salons.map((salon) => (
+          ))}
+        </div>
+      ) : salons && salons.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {salons.map((salon) => (
             <SalonCard 
               key={salon.id}
               id={salon.id}
@@ -81,16 +108,23 @@ export const FeaturedSalons = () => {
               services={salon.services || []}
               description={salon.description}
             />
-          ))
-        ) : (
-          <div className="col-span-full text-center text-gray-600">
-            No salons available at the moment.
-          </div>
-        )}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-12">
+          <p className="text-gray-600 mb-4">No salons available at the moment.</p>
+          <Button onClick={() => window.location.reload()}>
+            Refresh Page
+          </Button>
+        </div>
+      )}
 
       <div className="text-center mt-12">
-        <Button size="lg" onClick={() => navigate('/salons')}>
+        <Button 
+          size="lg" 
+          onClick={() => navigate('/salons')}
+          className="min-w-[200px]"
+        >
           View All Salons
         </Button>
       </div>
