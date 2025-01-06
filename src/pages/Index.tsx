@@ -1,59 +1,8 @@
 import { Hero } from "@/components/Hero";
 import { Navbar } from "@/components/Navbar";
-import { SalonCard } from "@/components/SalonCard";
+import { FeaturedSalons } from "@/components/FeaturedSalons";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
-
-const FEATURED_SALONS = [
-  {
-    id: "1",
-    name: "Style Studio Hyderabad",
-    image: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80",
-    rating: 4.8,
-    location: "Banjara Hills, Hyderabad",
-    services: ["Haircut", "Color", "Styling"],
-  },
-  {
-    id: "2",
-    name: "Bangalore Beauty Lounge",
-    image: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80",
-    rating: 4.9,
-    location: "Indiranagar, Bangalore",
-    services: ["Facial", "Massage", "Nails"],
-  },
-  {
-    id: "3",
-    name: "Hyderabad Hair Hub",
-    image: "https://images.unsplash.com/photo-1633681926022-84c23e8cb2d6?auto=format&fit=crop&w=800&q=80",
-    rating: 4.7,
-    location: "Jubilee Hills, Hyderabad",
-    services: ["Haircut", "Beard Trim", "Styling"],
-  },
-  {
-    id: "4",
-    name: "Bangalore Glamour",
-    image: "https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=800&q=80",
-    rating: 4.9,
-    location: "Koramangala, Bangalore",
-    services: ["Makeup", "Hair Styling", "Bridal"],
-  },
-  {
-    id: "5",
-    name: "Royal Spa Hyderabad",
-    image: "https://images.unsplash.com/photo-1600948836101-f9ffda59d250?auto=format&fit=crop&w=800&q=80",
-    rating: 4.8,
-    location: "Gachibowli, Hyderabad",
-    services: ["Massage", "Facial", "Body Treatments"],
-  },
-  {
-    id: "6",
-    name: "Bangalore Barbers",
-    image: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=800&q=80",
-    rating: 4.6,
-    location: "HSR Layout, Bangalore",
-    services: ["Men's Cuts", "Shave", "Hair Treatment"],
-  },
-];
 
 const Footer = () => (
   <footer className="bg-gray-50 border-t">
@@ -112,11 +61,7 @@ const Index = () => {
             Discover top-rated salons in your city, from classic barbershops to luxury spa experiences
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {FEATURED_SALONS.map((salon) => (
-            <SalonCard key={salon.name} {...salon} />
-          ))}
-        </div>
+        <FeaturedSalons />
         <div className="text-center mt-12">
           <Button size="lg" onClick={() => navigate('/salons')}>
             View All Salons
