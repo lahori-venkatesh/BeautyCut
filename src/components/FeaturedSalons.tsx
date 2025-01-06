@@ -20,13 +20,23 @@ const fetchFeaturedSalons = async () => {
       throw new Error(error.message);
     }
     
+    console.log("Raw response from Supabase:", { data, error });
+    
     if (!data) {
       console.log("No salons data returned");
       return [];
     }
     
-    console.log("Successfully fetched salons:", data);
-    return data;
+    // Validate the data structure
+    const validatedData = data.map(salon => ({
+      ...salon,
+      services: Array.isArray(salon.services) ? salon.services : [],
+      rating: Number(salon.rating) || 0,
+      image_url: salon.image_url || "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80"
+    }));
+    
+    console.log("Successfully processed salons data:", validatedData);
+    return validatedData;
   } catch (error) {
     console.error("Failed to fetch salons:", error);
     throw error;
