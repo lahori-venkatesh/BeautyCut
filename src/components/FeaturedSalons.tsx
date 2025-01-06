@@ -4,12 +4,11 @@ import { SalonCard } from "@/components/SalonCard";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
-import { Loader } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 // Fetch featured salons function with better error handling
 const fetchFeaturedSalons = async () => {
-  console.log("Fetching featured salons...");
+  console.log("Starting to fetch featured salons...");
   try {
     const { data, error } = await supabase
       .from('salons')
@@ -17,8 +16,13 @@ const fetchFeaturedSalons = async () => {
       .limit(6);
     
     if (error) {
-      console.error("Error fetching salons:", error);
-      throw error;
+      console.error("Supabase error fetching salons:", error);
+      throw new Error(error.message);
+    }
+    
+    if (!data) {
+      console.log("No salons data returned");
+      return [];
     }
     
     console.log("Successfully fetched salons:", data);
@@ -56,7 +60,7 @@ export const FeaturedSalons = () => {
     retry: 2,
     meta: {
       onError: (error: Error) => {
-        console.error("Query error:", error);
+        console.error("Query error in FeaturedSalons:", error);
         toast({
           title: "Error loading salons",
           description: "Please try again later",
@@ -66,7 +70,12 @@ export const FeaturedSalons = () => {
     },
   });
 
-  console.log("Rendering FeaturedSalons with state:", { isLoading, error, salonsCount: salons?.length });
+  console.log("FeaturedSalons render state:", { 
+    isLoading, 
+    error, 
+    salonsCount: salons?.length,
+    salons 
+  });
 
   if (error) {
     return (
