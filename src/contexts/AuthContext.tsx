@@ -12,73 +12,76 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Initial session check
-    const initializeAuth = async () => {
+    const checkSession = async () => {
       try {
-        console.log("Initializing auth...");
+        console.log("Checking session...");
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error("Session initialization error:", error);
+          console.error("Session check error:", error);
           await handleSignOut();
           return;
         }
-
+        
         if (session?.user) {
-          await handleUserSession(session.user);
+          console.log("Session found, fetching profile...");
+          try {
+            const profile = await fetchUserProfile(session.user.id);
+            if (!profile) {
+              console.error("No profile found for user");
+              await handleSignOut();
+              return;
+            }
+            setUser(mapProfileToUser(profile, session.user.email || ''));
+          } catch (err) {
+            console.error("Error fetching user profile:", err);
+            await handleSignOut();
+          }
         } else {
-          console.log("No active session found");
+          console.log("No session found");
           setUser(null);
         }
       } catch (err) {
-        console.error("Auth initialization failed:", err);
+        console.error("Session check failed:", err);
         await handleSignOut();
       } finally {
         setLoading(false);
       }
     };
 
-    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event, session?.user?.id);
+      console.log("Auth state changed:", event);
       
       if (event === 'SIGNED_OUT') {
         console.log("User signed out");
         setUser(null);
         return;
       }
-
+      
       if (session?.user) {
-        await handleUserSession(session.user);
+        try {
+          const profile = await fetchUserProfile(session.user.id);
+          if (!profile) {
+            console.error("No profile found for user");
+            await handleSignOut();
+            return;
+          }
+          setUser(mapProfileToUser(profile, session.user.email || ''));
+        } catch (err) {
+          console.error("Error fetching user profile:", err);
+          await handleSignOut();
+        }
+      } else {
+        setUser(null);
       }
     });
 
-    initializeAuth();
+    checkSession();
 
     return () => {
       subscription.unsubscribe();
     };
   }, []);
-
-  const handleUserSession = async (authUser: any) => {
-    try {
-      console.log("Fetching profile for user:", authUser.id);
-      const profile = await fetchUserProfile(authUser.id);
-      
-      if (!profile) {
-        console.error("No profile found for user");
-        await handleSignOut();
-        return;
-      }
-
-      const mappedUser = mapProfileToUser(profile, authUser.email || '');
-      console.log("Setting user state:", mappedUser);
-      setUser(mappedUser);
-    } catch (err) {
-      console.error("Error handling user session:", err);
-      await handleSignOut();
-    }
-  };
 
   const handleSignOut = async () => {
     try {
@@ -97,7 +100,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (error) {
         console.error("Login error:", error);
-        throw new Error(error.message);
+        if (error.message.includes("Invalid login credentials")) {
+          throw new Error("Invalid email or password. Please try again.");
+        }
+        throw error;
       }
 
       if (data.user) {
@@ -134,10 +140,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log("Attempting signup for:", email, "with role:", role);
       
+      // Sign up the user first
       const { data, error } = await signUp(email, password, { name, role });
       if (error) throw error;
 
       if (data.user) {
+        // Create profile with role
         const { error: profileError } = await supabase
           .from('profiles')
           .upsert([
@@ -147,15 +155,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               email: email,
               role: role
             }
-          ]);
+          ], { onConflict: 'id' });
 
         if (profileError) throw profileError;
 
         toast({
           title: "Sign Up Successful",
-          description: "Please check your email to confirm your account before logging in.",
+          description: "Please check your email inbox (including spam folder) for a confirmation link. You must confirm your email before logging in.",
           duration: 6000,
         });
+
+        setTimeout(() => {
+          toast({
+            title: "Next Steps",
+            description: "1. Open your email\n2. Click the confirmation link\n3. Return here to log in",
+            duration: 8000,
+          });
+        }, 1000);
       }
     } catch (error: any) {
       console.error("Signup error:", error);
@@ -168,12 +184,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const logout = async () => {
+    try {
+      await handleSignOut();
+      toast({
+        title: "Logged Out",
+        description: "You have been successfully logged out.",
+      });
+    } catch (error: any) {
+      console.error("Logout error:", error);
+      toast({
+        title: "Logout Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return null;
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout: handleSignOut }}>
+    <AuthContext.Provider value={{ user, login, signup, logout }}>
       {children}
     </AuthContext.Provider>
   );
