@@ -13,37 +13,9 @@ interface Salon {
   location: string;
   services: string[];
   description: string;
+  created_at: string;
+  updated_at: string;
 }
-
-const DEFAULT_SALONS: Salon[] = [
-  {
-    id: "1",
-    name: "Style Studio",
-    image_url: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80",
-    rating: 4.8,
-    location: "Banjara Hills, Hyderabad",
-    services: ["Haircut", "Color", "Styling"],
-    description: "Premium salon services"
-  },
-  {
-    id: "2",
-    name: "Glamour Zone",
-    image_url: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80",
-    rating: 4.9,
-    location: "Indiranagar, Bangalore",
-    services: ["Facial", "Massage", "Nails"],
-    description: "Luxury beauty treatments"
-  },
-  {
-    id: "3",
-    name: "The Barber's Club",
-    image_url: "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=800&q=80",
-    rating: 4.7,
-    location: "Whitefield, Bangalore",
-    services: ["Men's Grooming", "Beard Styling", "Hair Color"],
-    description: "Premium men's grooming"
-  }
-];
 
 const fetchFeaturedSalons = async (): Promise<Salon[]> => {
   console.log("Fetching featured salons...");
@@ -54,12 +26,12 @@ const fetchFeaturedSalons = async (): Promise<Salon[]> => {
 
   if (error) {
     console.error("Error fetching salons:", error);
-    return DEFAULT_SALONS;
+    throw error;
   }
 
-  if (!data || data.length === 0) {
-    console.log("No salons found in database, using default salons");
-    return DEFAULT_SALONS;
+  if (!data) {
+    console.log("No salons found");
+    return [];
   }
 
   console.log("Fetched salons:", data);
@@ -82,6 +54,9 @@ export const FeaturedSalons = () => {
   const { data: salons, isLoading, error } = useQuery({
     queryKey: ["featured-salons"],
     queryFn: fetchFeaturedSalons,
+    meta: {
+      errorMessage: "Failed to load featured salons",
+    },
   });
 
   console.log("FeaturedSalons component state:", { salons, isLoading, error });

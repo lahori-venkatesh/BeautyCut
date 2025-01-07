@@ -94,10 +94,10 @@ export default function ListSalon() {
       // Format the location string
       const location = `${values.address}, ${values.city}, ${values.state} ${values.zipCode}`;
       
-      // Format services array
+      // Format services array to match Supabase schema
       const formattedServices = values.services.map(service => service.name);
 
-      console.log('Creating new salon with services:', formattedServices);
+      console.log('Formatted services:', formattedServices);
       
       // Insert salon data into Supabase
       const { data: salon, error } = await supabase
@@ -106,7 +106,7 @@ export default function ListSalon() {
           name: values.salonName,
           description: values.description,
           location: location,
-          image_url: values.salonImages[0] || "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80",
+          image_url: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80", // Default image
           rating: 5.0, // Default rating for new salons
           services: formattedServices,
         })
@@ -125,6 +125,7 @@ export default function ListSalon() {
         description: "Your salon has been listed successfully.",
       });
       
+      // Navigate to the salon admin dashboard
       navigate("/salon-admin");
     } catch (error) {
       console.error('Error submitting salon:', error);
