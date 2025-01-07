@@ -22,6 +22,7 @@ const fetchFeaturedSalons = async (): Promise<Salon[]> => {
   const { data, error } = await supabase
     .from("salons")
     .select("*")
+    .order('created_at', { ascending: false })
     .limit(6);
 
   if (error) {
