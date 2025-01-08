@@ -59,7 +59,9 @@ export default function Favorites() {
                   image={favorite.salon.image_url || '/placeholder.svg'}
                   rating={favorite.salon.rating || 0}
                   location={favorite.salon.location}
-                  services={(favorite.salon.services || []).map((service: Service) => service.name)}
+                  services={(favorite.salon.services || []).map((service: any) => 
+                    typeof service === 'object' && service !== null ? service.name : String(service)
+                  )}
                 />
               ))}
             </div>
