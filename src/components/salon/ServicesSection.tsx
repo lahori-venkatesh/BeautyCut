@@ -86,7 +86,15 @@ export function ServicesSection({ form }: { form: any }) {
                 <FormItem>
                   <FormLabel>Price</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., ₹300" {...field} />
+                    <Input 
+                      type="number"
+                      placeholder="e.g., 300" 
+                      {...field}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        field.onChange(value === "" ? "" : Number(value));
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -5,157 +5,155 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
+import { BasicDetailsSection } from "@/components/salon/BasicDetailsSection";
+import { ServicesSection } from "@/components/salon/ServicesSection";
+import { StaffSection } from "@/components/salon/StaffSection";
 import { GalleryUpload } from "@/components/salon/GalleryUpload";
 import { BookingFeatures } from "@/components/salon/BookingFeatures";
 import { PromotionsSection } from "@/components/salon/PromotionsSection";
 import { AccessibilitySection } from "@/components/salon/AccessibilitySection";
-import { ServicesSection } from "@/components/salon/ServicesSection";
-import { StaffSection } from "@/components/salon/StaffSection";
-import { BasicDetailsSection } from "@/components/salon/BasicDetailsSection";
-import { useAuth } from "@/contexts/AuthContext";
-import { SalonOwnerSignUp } from "@/components/SalonOwnerSignUp";
-import { supabase } from "@/integrations/supabase/client";
 
 const formSchema = z.object({
   salonName: z.string().min(2, { message: "Salon name must be at least 2 characters." }),
-  description: z.string().min(10, { message: "Description must be at least 10 characters." }),
+  email: z.string().email({ message: "Please enter a valid email address." }),
+  phone: z.string().min(10, { message: "Please enter a valid phone number." }),
   address: z.string().min(5, { message: "Address must be at least 5 characters." }),
-  city: z.string().min(2, { message: "City is required" }),
-  state: z.string().min(2, { message: "State is required" }),
-  zipCode: z.string().min(5, { message: "Valid ZIP code is required" }),
-  phone: z.string().min(10, { message: "Valid phone number is required" }),
-  email: z.string().email({ message: "Valid email is required" }),
-  operatingHours: z.string().min(1, { message: "Operating hours are required" }),
+  city: z.string().min(2, { message: "City must be at least 2 characters." }),
+  state: z.string().min(2, { message: "State must be at least 2 characters." }),
+  zipCode: z.string().min(5, { message: "ZIP code must be at least 5 characters." }),
+  operatingHours: z.string().min(5, { message: "Operating hours are required." }),
   services: z.array(z.object({
     name: z.string().min(1, "Service name is required"),
-    description: z.string().min(1, "Service description is required"),
-    price: z.string().min(1, "Price is required"),
-    duration: z.string().min(1, "Duration is required"),
-    experts: z.array(z.string())
-  })).min(1, "At least one service is required"),
-  staff: z.array(z.object({
-    name: z.string(),
-    role: z.string(),
-    expertise: z.array(z.string()),
-    image: z.any().optional(),
-    rating: z.number().min(0).max(5)
-  })),
-  salonImages: z.array(z.any()).min(1, "At least one salon image is required"),
-  parkingImages: z.array(z.any()),
-  parkingInfo: z.string().min(1, "Parking information is required"),
-  accessibilityFeatures: z.string().min(1, "Accessibility features are required"),
-  paymentMethods: z.string().min(1, "Payment methods are required"),
-  cancellationPolicy: z.string().min(1, "Cancellation policy is required"),
+    price: z.number().min(0, "Price must be a positive number"),
+    duration: z.number().min(1, "Duration must be at least 1 minute")
+  })).min(1, { message: "At least one service is required." }),
+  onlineBooking: z.boolean().optional(),
+  cancellationPolicy: z.string().optional(),
+  waitlistOptions: z.boolean().optional(),
   currentOffers: z.string().optional(),
   membershipPlans: z.string().optional(),
-  onlineBooking: z.boolean().optional(),
-  waitlistOptions: z.boolean().optional(),
-  safetyMeasures: z.array(z.string()).optional(),
+  parkingInfo: z.string().optional(),
+  accessibilityFeatures: z.string().optional(),
+  paymentMethods: z.string().optional(),
+  salonImages: z.any().optional(),
+  parkingImages: z.any().optional(),
 });
 
 export default function ListSalon() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+
+  useEffect(() => {
+    if (!user) {
+      console.log("No user found, redirecting to login");
+      navigate('/');
+      return;
+    }
+    
+    if (user.role !== 'salon_owner') {
+      console.log("User is not a salon owner, redirecting to home");
+      navigate('/');
+      return;
+    }
+  }, [user, navigate]);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       salonName: "",
-      description: "",
+      email: "",
+      phone: "",
       address: "",
       city: "",
       state: "",
       zipCode: "",
-      phone: "",
-      email: "",
       operatingHours: "",
-      services: [],
-      staff: [],
-      salonImages: [],
-      parkingImages: [],
+      services: [
+        {
+          name: "",
+          price: 0,
+          duration: 30
+        }
+      ],
       onlineBooking: false,
       waitlistOptions: false,
-      cancellationPolicy: "",
-      currentOffers: "",
-      membershipPlans: "",
-      parkingInfo: "",
-      accessibilityFeatures: "",
-      paymentMethods: "",
-      safetyMeasures: [],
     },
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    console.log("Form submitted with values:", values);
-    
     try {
+      console.log("Form values:", values);
+      
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to create a salon.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Format the location string
       const location = `${values.address}, ${values.city}, ${values.state} ${values.zipCode}`;
       
-      // Format services array
-      const formattedServices = values.services.map(service => service.name);
+      // Format services array to match the Supabase schema (array of strings)
+      const formattedServices = values.services.map(service => 
+        JSON.stringify({
+          name: service.name,
+          price: service.price,
+          duration: service.duration
+        })
+      );
 
-      console.log('Creating new salon with services:', formattedServices);
+      console.log('Attempting to insert salon with location:', location);
+      console.log('Formatted services:', formattedServices);
       
       // Insert salon data into Supabase
       const { data: salon, error } = await supabase
         .from('salons')
         .insert({
           name: values.salonName,
-          description: values.description,
+          description: values.cancellationPolicy || '',
           location: location,
-          image_url: values.salonImages[0] || "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80",
-          rating: 5.0, // Default rating for new salons
           services: formattedServices,
+          rating: 5.0, // Default rating for new salons
         })
         .select()
         .single();
 
       if (error) {
         console.error('Error creating salon:', error);
-        throw error;
+        toast({
+          title: "Error",
+          description: "Failed to create salon. Please try again.",
+          variant: "destructive",
+        });
+        return;
       }
 
       console.log('Salon created successfully:', salon);
       
       toast({
-        title: "Salon Registration Successful",
+        title: "Success",
         description: "Your salon has been listed successfully.",
       });
       
-      navigate("/salon-admin");
+      // Redirect to salon admin dashboard
+      navigate('/salon-admin');
     } catch (error) {
-      console.error('Error submitting salon:', error);
+      console.error('Error in form submission:', error);
       toast({
         title: "Error",
-        description: "Failed to submit salon listing. Please try again.",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     }
   };
-
-  if (!user || user.role !== 'salon_owner') {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center mb-6">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate(-1)}
-            className="mr-4"
-          >
-            <ArrowLeft className="h-6 w-6" />
-          </Button>
-          <h1 className="text-3xl font-bold">List Your Salon</h1>
-        </div>
-        <div className="max-w-md mx-auto">
-          <SalonOwnerSignUp />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -183,7 +181,7 @@ export default function ListSalon() {
             <Button 
               type="submit" 
               className="w-full"
-              onClick={() => console.log("Submit button clicked")}
+              onClick={() => console.log("Submit button clicked", form.getValues())}
             >
               Submit Salon Listing
             </Button>
