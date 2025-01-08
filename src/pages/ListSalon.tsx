@@ -101,14 +101,11 @@ export default function ListSalon() {
       // Format the location string
       const location = `${values.address}, ${values.city}, ${values.state} ${values.zipCode}`;
       
-      // Format services array
-      const formattedServices = values.services.map(service => ({
-        name: service.name,
-        price: service.price,
-        duration: service.duration
-      }));
+      // Transform services array to only include names
+      const serviceNames = values.services.map(service => service.name);
 
       console.log('Attempting to insert salon with location:', location);
+      console.log('Services transformed to:', serviceNames);
       
       // Insert salon data into Supabase
       const { data: salon, error } = await supabase
@@ -117,7 +114,7 @@ export default function ListSalon() {
           name: values.salonName,
           description: values.cancellationPolicy || '',
           location: location,
-          services: formattedServices,
+          services: serviceNames, // Now we're passing an array of strings
           rating: 5.0, // Default rating for new salons
         })
         .select()
