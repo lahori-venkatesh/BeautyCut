@@ -135,7 +135,7 @@ export type Database = {
           location: string
           name: string
           rating: number | null
-          services: string[] | null
+          services: Json[] | null
           updated_at: string
         }
         Insert: {
@@ -146,7 +146,7 @@ export type Database = {
           location: string
           name: string
           rating?: number | null
-          services?: string[] | null
+          services?: Json[] | null
           updated_at?: string
         }
         Update: {
@@ -157,7 +157,7 @@ export type Database = {
           location?: string
           name?: string
           rating?: number | null
-          services?: string[] | null
+          services?: Json[] | null
           updated_at?: string
         }
         Relationships: []

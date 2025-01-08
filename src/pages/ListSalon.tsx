@@ -14,8 +14,8 @@ import { AccessibilitySection } from "@/components/salon/AccessibilitySection";
 import { BookingFeatures } from "@/components/salon/BookingFeatures";
 import { PromotionsSection } from "@/components/salon/PromotionsSection";
 import { SalonPolicies } from "@/components/salon/SalonPolicies";
+import { Service } from "@/integrations/supabase/database.types";
 
-// Form schema
 const formSchema = z.object({
   salonName: z.string().min(2, "Salon name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
@@ -28,8 +28,10 @@ const formSchema = z.object({
   services: z.array(
     z.object({
       name: z.string(),
+      description: z.string().optional(),
       price: z.number(),
       duration: z.number(),
+      experts: z.array(z.string()).optional(),
     })
   ),
   staffMembers: z.array(
@@ -73,20 +75,19 @@ export default function ListSalon() {
     try {
       console.log("Form submitted with values:", values);
 
-      // Format the location string
       const location = `${values.address}, ${values.city}, ${values.state} ${values.zipCode}`;
       
-      // Format services array to include full service objects
-      const formattedServices = values.services.map(service => ({
+      const formattedServices: Service[] = values.services.map(service => ({
         name: service.name,
+        description: service.description || '',
         price: service.price,
-        duration: service.duration
+        duration: service.duration,
+        experts: service.experts || [],
       }));
 
       console.log('Attempting to insert salon with location:', location);
       console.log('Formatted services:', formattedServices);
       
-      // Insert salon data into Supabase
       const { data: salon, error } = await supabase
         .from('salons')
         .insert({
@@ -94,7 +95,7 @@ export default function ListSalon() {
           description: values.cancellationPolicy || '',
           location: location,
           services: formattedServices,
-          rating: 5.0, // Default rating for new salons
+          rating: 5.0,
         })
         .select()
         .single();
@@ -111,7 +112,6 @@ export default function ListSalon() {
         description: "Your salon has been listed successfully.",
       });
 
-      // Redirect to the salon's page
       navigate(`/salon/${salon.id}`);
     } catch (error) {
       console.error('Error in form submission:', error);
