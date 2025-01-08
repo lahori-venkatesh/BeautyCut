@@ -13,11 +13,8 @@ interface Salon {
   location: string;
   services: string[];
   description: string;
-  created_at: string;
-  updated_at: string;
 }
 
-// Default salons to show while loading or if no data
 const DEFAULT_SALONS: Salon[] = [
   {
     id: "1",
@@ -26,31 +23,25 @@ const DEFAULT_SALONS: Salon[] = [
     rating: 4.8,
     location: "Banjara Hills, Hyderabad",
     services: ["Haircut", "Color", "Styling"],
-    description: "Premium salon services",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
+    description: "Premium salon services"
   },
   {
     id: "2",
     name: "Glamour Zone",
     image_url: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80",
     rating: 4.9,
-    location: "Jubilee Hills, Hyderabad",
+    location: "Indiranagar, Bangalore",
     services: ["Facial", "Massage", "Nails"],
-    description: "Luxury beauty services",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
+    description: "Luxury beauty treatments"
   },
   {
     id: "3",
-    name: "Elite Cuts",
-    image_url: "https://images.unsplash.com/photo-1633681926022-84c23e8cb2d6?auto=format&fit=crop&w=800&q=80",
+    name: "The Barber's Club",
+    image_url: "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=800&q=80",
     rating: 4.7,
-    location: "Indiranagar, Bangalore",
-    services: ["Haircut", "Beard Trim", "Facial"],
-    description: "Premium grooming services",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
+    location: "Whitefield, Bangalore",
+    services: ["Men's Grooming", "Beard Styling", "Hair Color"],
+    description: "Premium men's grooming"
   }
 ];
 
@@ -59,7 +50,6 @@ const fetchFeaturedSalons = async (): Promise<Salon[]> => {
   const { data, error } = await supabase
     .from("salons")
     .select("*")
-    .order('created_at', { ascending: false })
     .limit(6);
 
   if (error) {
@@ -68,7 +58,7 @@ const fetchFeaturedSalons = async (): Promise<Salon[]> => {
   }
 
   if (!data || data.length === 0) {
-    console.log("No salons found, using default salons");
+    console.log("No salons found in database, using default salons");
     return DEFAULT_SALONS;
   }
 
@@ -78,7 +68,7 @@ const fetchFeaturedSalons = async (): Promise<Salon[]> => {
 
 const LoadingSkeleton = () => (
   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-    {[...Array(3)].map((_, i) => (
+    {[...Array(6)].map((_, i) => (
       <div key={i} className="space-y-4">
         <Skeleton className="h-48 w-full" />
         <Skeleton className="h-4 w-3/4" />
@@ -89,17 +79,27 @@ const LoadingSkeleton = () => (
 );
 
 export const FeaturedSalons = () => {
-  const { data: salons, isLoading } = useQuery({
+  const { data: salons, isLoading, error } = useQuery({
     queryKey: ["featured-salons"],
     queryFn: fetchFeaturedSalons,
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
-    cacheTime: 1000 * 60 * 30, // Keep in cache for 30 minutes
   });
 
-  console.log("FeaturedSalons component state:", { salons, isLoading });
+  console.log("FeaturedSalons component state:", { salons, isLoading, error });
 
   if (isLoading) {
     return <LoadingSkeleton />;
+  }
+
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>
+          Failed to load featured salons. Please try again later.
+        </AlertDescription>
+      </Alert>
+    );
   }
 
   if (!salons || salons.length === 0) {

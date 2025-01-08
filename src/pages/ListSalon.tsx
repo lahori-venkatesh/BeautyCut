@@ -59,8 +59,6 @@ export default function ListSalon() {
   const navigate = useNavigate();
   const { user } = useAuth();
   
-  console.log("ListSalon component - Current user:", user);
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -99,8 +97,7 @@ export default function ListSalon() {
       // Format services array
       const formattedServices = values.services.map(service => service.name);
 
-      console.log('Formatted location:', location);
-      console.log('Formatted services:', formattedServices);
+      console.log('Creating new salon with services:', formattedServices);
       
       // Insert salon data into Supabase
       const { data: salon, error } = await supabase
@@ -109,7 +106,7 @@ export default function ListSalon() {
           name: values.salonName,
           description: values.description,
           location: location,
-          image_url: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80", // Default image for now
+          image_url: values.salonImages[0] || "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=80",
           rating: 5.0, // Default rating for new salons
           services: formattedServices,
         })
@@ -124,11 +121,10 @@ export default function ListSalon() {
       console.log('Salon created successfully:', salon);
       
       toast({
-        title: "Success!",
+        title: "Salon Registration Successful",
         description: "Your salon has been listed successfully.",
       });
       
-      // Navigate to the salon admin dashboard
       navigate("/salon-admin");
     } catch (error) {
       console.error('Error submitting salon:', error);
