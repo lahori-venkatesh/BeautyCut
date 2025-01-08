@@ -14,6 +14,13 @@ interface SalonCardProps {
 
 export const SalonCard = ({ id, name, image, rating, location, services }: SalonCardProps) => {
   const [showDetails, setShowDetails] = useState(false);
+  
+  // Ensure services is always an array
+  const normalizedServices = Array.isArray(services) ? services : [];
+  
+  console.log("Rendering SalonCard for salon:", name, {
+    services: normalizedServices,
+  });
 
   return (
     <>
@@ -40,9 +47,9 @@ export const SalonCard = ({ id, name, image, rating, location, services }: Salon
         </CardHeader>
         <CardContent className="p-4 pt-0">
           <div className="flex flex-wrap gap-2">
-            {services.map((service) => (
+            {normalizedServices.map((service, index) => (
               <span
-                key={service}
+                key={`${service}-${index}`}
                 className="px-2 py-1 bg-secondary text-xs rounded-full text-primary"
               >
                 {service}
@@ -53,7 +60,7 @@ export const SalonCard = ({ id, name, image, rating, location, services }: Salon
       </Card>
 
       <SalonDetailsModal
-        salon={{ id, name, image, rating, location, services }}
+        salon={{ id, name, image, rating, location, services: normalizedServices }}
         isOpen={showDetails}
         onClose={() => setShowDetails(false)}
       />
