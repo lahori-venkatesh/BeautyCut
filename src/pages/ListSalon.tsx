@@ -94,7 +94,7 @@ export default function ListSalon() {
           name: values.salonName,
           description: values.cancellationPolicy || '',
           location: location,
-          services: formattedServices,
+          services: formattedServices as any, // Type assertion needed due to Supabase types
           rating: 5.0,
         })
         .select()
