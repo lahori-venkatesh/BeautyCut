@@ -77,7 +77,7 @@ export default function ListSalon() {
 
       const location = `${values.address}, ${values.city}, ${values.state} ${values.zipCode}`;
       
-      const formattedServices: Service[] = values.services.map(service => ({
+      const formattedServices = values.services.map(service => ({
         name: service.name,
         description: service.description || '',
         price: service.price,
@@ -94,7 +94,7 @@ export default function ListSalon() {
           name: values.salonName,
           description: values.cancellationPolicy || '',
           location: location,
-          services: formattedServices as any, // Type assertion needed due to Supabase types
+          services: formattedServices,
           rating: 5.0,
         })
         .select()
