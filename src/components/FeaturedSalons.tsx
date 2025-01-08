@@ -93,7 +93,7 @@ export const FeaturedSalons = () => {
     queryKey: ["featured-salons"],
     queryFn: fetchFeaturedSalons,
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
-    gcTime: 1000 * 60 * 30, // Keep in cache for 30 minutes (previously cacheTime)
+    cacheTime: 1000 * 60 * 30, // Keep in cache for 30 minutes
   });
 
   console.log("FeaturedSalons component state:", { salons, isLoading });
