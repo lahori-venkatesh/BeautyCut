@@ -6,7 +6,6 @@ import { SalonCard } from "@/components/SalonCard";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Service } from "@/integrations/supabase/database.types";
 
 export default function Favorites() {
   const { user } = useAuth();
@@ -59,9 +58,7 @@ export default function Favorites() {
                   image={favorite.salon.image_url || '/placeholder.svg'}
                   rating={favorite.salon.rating || 0}
                   location={favorite.salon.location}
-                  services={(favorite.salon.services || []).map((service: any) => 
-                    typeof service === 'object' && service !== null ? service.name : String(service)
-                  )}
+                  services={favorite.salon.services || []}
                 />
               ))}
             </div>

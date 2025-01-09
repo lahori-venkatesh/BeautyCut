@@ -11,7 +11,6 @@ import { SalonServices } from "./SalonServices";
 import { SalonStaff } from "./SalonStaff";
 import { SalonReviews } from "./SalonReviews";
 import { SalonPolicies } from "./SalonPolicies";
-import { useForm } from "react-hook-form";
 
 interface SalonDetailsModalProps {
   salon: any;
@@ -21,13 +20,6 @@ interface SalonDetailsModalProps {
 
 export const SalonDetailsModal = ({ salon, isOpen, onClose }: SalonDetailsModalProps) => {
   console.log("Rendering SalonDetailsModal for salon:", salon?.name);
-  
-  const form = useForm({
-    defaultValues: {
-      hygienePolicies: "",
-      appointmentPolicies: ""
-    }
-  });
   
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -62,7 +54,7 @@ export const SalonDetailsModal = ({ salon, isOpen, onClose }: SalonDetailsModalP
           </TabsContent>
           
           <TabsContent value="policies">
-            <SalonPolicies form={form} />
+            <SalonPolicies salon={salon} />
           </TabsContent>
         </Tabs>
       </DialogContent>
